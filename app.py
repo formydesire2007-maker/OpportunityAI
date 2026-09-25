@@ -160,6 +160,36 @@ if search_button:
             )
 
             st.markdown("---")
+            # Organization
+            organization = result.get(
+                "source",
+                "Not specified"
+            )
+
+            # Location
+            location_text = result.get(
+                "location",
+                "Not specified"
+            )
+
+            # Deadline
+            deadline = result.get(
+                "deadline",
+                "Not specified"
+            )
+
+            st.subheader(f"{index}. {title}")
+
+            st.write(f"🏢 **Organization:** {organization}")
+            st.write(f"📍 **Location:** {location_text}")
+            st.write(f"📅 **Deadline:** {deadline}")
+
+            st.write(f"⭐ **Profile Match:** {score}%")
+
+            st.link_button(
+                "🔗 View Opportunity",
+                link
+            )
 
             st.markdown(
                 f"### {index}. {title}"

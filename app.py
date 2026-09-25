@@ -65,6 +65,7 @@ def search_serpapi(query):
     params = {
         "engine": "google",
         "q": query,
+        "safe": "active",
         "api_key": API_KEY,
         "num": 10
     }

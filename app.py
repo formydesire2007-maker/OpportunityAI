@@ -16,8 +16,8 @@ st.write(
     "and certifications using live web search."
 )
 
-# Get SerpApi key securely
-API_KEY = os.getenv("SERPAPI_KEY")
+# Get SerpApi key securely 
+API_KEY = st.secrets.get("SERPAPI_KEY")
 
 # Student profile
 st.sidebar.header("👩‍🎓 Student Profile")

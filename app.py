@@ -66,6 +66,7 @@ def search_serpapi(query):
         "engine": "google",
         "q": query,
         "safe": "active",
+        "site": "-linkedin.com -youtube.com",
         "api_key": API_KEY,
         "num": 10
     }

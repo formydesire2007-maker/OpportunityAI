@@ -124,7 +124,7 @@ if search_button:
 
     query = (
         f"{opportunity_type} for {education} students "
-        f"{skills} {location} 2026"
+        f"{skills} {location} 2026 -site:linkedin.com -site:youtube.com"
     )
 
     st.info(f"Searching for: **{query}**")

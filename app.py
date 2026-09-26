@@ -2,7 +2,9 @@ import requests
 import streamlit as st
 import re
 
-# ---------------- PAGE CONFIG ----------------
+# ============================================================
+#                    PAGE CONFIG
+# ============================================================
 
 st.set_page_config(
     page_title="OpportunityAI",
@@ -10,7 +12,10 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------- CUSTOM CSS ----------------
+
+# ============================================================
+#                    CUSTOM CSS
+# ============================================================
 
 st.markdown("""
 <style>
@@ -64,7 +69,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ---------------- SESSION STATE ----------------
+# ============================================================
+#                    SESSION STATE
+# ============================================================
 
 if "saved_opportunities" not in st.session_state:
     st.session_state.saved_opportunities = []
@@ -73,7 +80,9 @@ if "search_results" not in st.session_state:
     st.session_state.search_results = []
 
 
-# ---------------- HEADER ----------------
+# ============================================================
+#                       HEADER
+# ============================================================
 
 st.markdown(
     '<div class="main-title">🎓 OpportunityAI</div>',
@@ -94,29 +103,37 @@ st.write(
 )
 
 
-# ---------------- API KEY ----------------
+# ============================================================
+#                       API KEY
+# ============================================================
 
 API_KEY = st.secrets.get("SERPAPI_KEY")
 
 
-# ---------------- SIDEBAR ----------------
+# ============================================================
+#                       SIDEBAR
+# ============================================================
 
 st.sidebar.header("👩‍🎓 Student Profile")
+
 
 education = st.sidebar.text_input(
     "Education",
     "B.Tech"
 )
 
+
 skills = st.sidebar.text_input(
     "Skills",
     "Python, AI, Machine Learning"
 )
 
+
 location = st.sidebar.text_input(
     "Preferred Location",
     "India"
 )
+
 
 opportunity_type = st.sidebar.selectbox(
     "Opportunity Type",
@@ -130,17 +147,22 @@ opportunity_type = st.sidebar.selectbox(
     ]
 )
 
+
 search_button = st.sidebar.button(
     "🔎 Find Opportunities",
     use_container_width=True
 )
 
 
-# ---------------- SIDEBAR SAVED COUNT ----------------
+# ============================================================
+#                  SAVED COUNT
+# ============================================================
 
 st.sidebar.markdown("---")
 
-st.sidebar.subheader("🔖 Saved Opportunities")
+st.sidebar.subheader(
+    "🔖 Saved Opportunities"
+)
 
 st.sidebar.write(
     f"Saved: **{len(st.session_state.saved_opportunities)}**"
@@ -148,7 +170,7 @@ st.sidebar.write(
 
 
 # ============================================================
-#                    SEARCH FUNCTION
+#                  SEARCH FUNCTION
 # ============================================================
 
 def search_serpapi(query):
@@ -162,10 +184,15 @@ def search_serpapi(query):
         return []
 
     params = {
+
         "engine": "google",
+
         "q": query,
+
         "api_key": API_KEY,
+
         "safe": "active",
+
         "num": 10
     }
 
@@ -179,6 +206,7 @@ def search_serpapi(query):
 
         data = response.json()
 
+
         if "error" in data:
 
             st.error(
@@ -187,10 +215,12 @@ def search_serpapi(query):
 
             return []
 
+
         return data.get(
             "organic_results",
             []
         )
+
 
     except Exception as e:
 
@@ -202,207 +232,14 @@ def search_serpapi(query):
 
 
 # ============================================================
-#              AI SMART SKILL MATCHING
-# ============================================================
-
-def extract_skills(text):
-
-    """
-    Extract commonly used technical skills
-    from opportunity title and description.
-    """
-
-    text = text.lower()
-
-    skill_database = [
-        "python",
-        "java",
-        "c",
-        "c++",
-        "javascript",
-        "html",
-        "css",
-        "sql",
-        "machine learning",
-        "deep learning",
-        "artificial intelligence",
-        "ai",
-        "ml",
-        "data science",
-        "data analysis",
-        "tensorflow",
-        "pytorch",
-        "flask",
-        "django",
-        "react",
-        "node.js",
-        "git",
-        "github",
-        "aws",
-        "azure",
-        "cloud",
-        "docker",
-        "kubernetes",
-        "mongodb",
-        "mysql",
-        "excel",
-        "power bi",
-        "tableau",
-        "nlp",
-        "computer vision",
-        "opencv",
-        "android",
-        "flutter"
-    ]
-
-    found_skills = []
-
-    for skill in skill_database:
-
-        if skill in text:
-
-            if skill not in found_skills:
-
-                found_skills.append(skill)
-
-    return found_skills
-
-
-def smart_skill_matching(
-    student_skills,
-    opportunity_text
-):
-
-    # ---------------- STUDENT SKILLS ----------------
-
-    student_skills_list = [
-        skill.strip().lower()
-        for skill in student_skills.split(",")
-        if skill.strip()
-    ]
-
-    # ---------------- OPPORTUNITY SKILLS ----------------
-
-    required_skills = extract_skills(
-        opportunity_text
-    )
-
-    # ---------------- MATCHING SKILLS ----------------
-
-    matching_skills = []
-
-    for student_skill in student_skills_list:
-
-        for required_skill in required_skills:
-
-            student_clean = student_skill.lower()
-            required_clean = required_skill.lower()
-
-            if (
-                student_clean == required_clean
-                or student_clean in required_clean
-                or required_clean in student_clean
-            ):
-
-                if required_skill not in matching_skills:
-
-                    matching_skills.append(
-                        required_skill
-                    )
-
-    # ---------------- MISSING SKILLS ----------------
-
-    missing_skills = [
-        skill
-        for skill in required_skills
-        if skill not in matching_skills
-    ]
-
-    # ---------------- AI MATCH SCORE ----------------
-
-    if len(required_skills) > 0:
-
-        skill_score = (
-            len(matching_skills)
-            / len(required_skills)
-        ) * 100
-
-        score = int(skill_score)
-
-    else:
-
-        # If no technical skills are detected,
-        # give a neutral profile score.
-
-        score = 50
-
-    # Keep score between 0 and 100
-
-    score = max(
-        0,
-        min(
-            score,
-            100
-        )
-    )
-
-    return (
-        matching_skills,
-        missing_skills,
-        score
-    )
-
-
-# ============================================================
-#                  SAVE FUNCTION
-# ============================================================
-
-def save_opportunity(opportunity):
-
-    existing_links = [
-        item["link"]
-        for item in st.session_state.saved_opportunities
-    ]
-
-    if opportunity["link"] not in existing_links:
-
-        st.session_state.saved_opportunities.append(
-            opportunity
-        )
-
-        st.toast(
-            "🔖 Opportunity saved!"
-        )
-
-    else:
-
-        st.toast(
-            "Already saved!"
-        )
-
-
-# ============================================================
-#                REMOVE FUNCTION
-# ============================================================
-
-def remove_opportunity(link):
-
-    st.session_state.saved_opportunities = [
-        item
-        for item in st.session_state.saved_opportunities
-        if item["link"] != link
-    ]
-
-    st.toast(
-        "Opportunity removed."
-    )
-
-
-# ============================================================
-#                      SEARCH
+#                       SEARCH
 # ============================================================
 
 if search_button:
+
+    # --------------------------------------------------------
+    # INTERNSHIPS
+    # --------------------------------------------------------
 
     if opportunity_type == "Internships":
 
@@ -414,6 +251,11 @@ if search_button:
             f"-site:youtube.com"
         )
 
+
+    # --------------------------------------------------------
+    # JOBS
+    # --------------------------------------------------------
+
     elif opportunity_type == "Jobs":
 
         query = (
@@ -423,6 +265,11 @@ if search_button:
             f"-site:linkedin.com "
             f"-site:youtube.com"
         )
+
+
+    # --------------------------------------------------------
+    # SCHOLARSHIPS
+    # --------------------------------------------------------
 
     elif opportunity_type == "Scholarships":
 
@@ -434,6 +281,11 @@ if search_button:
             f"-site:youtube.com"
         )
 
+
+    # --------------------------------------------------------
+    # HACKATHONS
+    # --------------------------------------------------------
+
     elif opportunity_type == "Hackathons":
 
         query = (
@@ -443,6 +295,11 @@ if search_button:
             f"-site:linkedin.com "
             f"-site:youtube.com"
         )
+
+
+    # --------------------------------------------------------
+    # COMPETITIONS
+    # --------------------------------------------------------
 
     elif opportunity_type == "Competitions":
 
@@ -454,6 +311,11 @@ if search_button:
             f"-site:youtube.com"
         )
 
+
+    # --------------------------------------------------------
+    # CERTIFICATIONS
+    # --------------------------------------------------------
+
     else:
 
         query = (
@@ -464,477 +326,42 @@ if search_button:
             f"-site:youtube.com"
         )
 
+
+    # --------------------------------------------------------
+    # SHOW SEARCH QUERY
+    # --------------------------------------------------------
+
     st.info(
         f"🔎 Searching for: **{query}**"
     )
+
+
+    # --------------------------------------------------------
+    # SEARCH SERPAPI
+    # --------------------------------------------------------
 
     results = search_serpapi(
         query
     )
 
+
+    # --------------------------------------------------------
+    # STORE RAW RESULTS
+    # --------------------------------------------------------
+
     if results:
 
-        formatted_results = []
-
-        for result in results:
-
-            title = result.get(
-                "title",
-                "Opportunity"
-            )
-
-            link = result.get(
-                "link",
-                "#"
-            )
-
-            snippet = result.get(
-                "snippet",
-                "No description available."
-            )
-
-            organization = result.get(
-                "source",
-                "Not specified"
-            )
-
-            location_text = result.get(
-                "location",
-                location
-            )
-
-            deadline = result.get(
-                "deadline",
-                "Check official website"
-            )
-
-            # ==================================================
-            # AI SMART MATCHING
-            # ==================================================
-
-            opportunity_text = (
-                title
-                + " "
-                + snippet
-            )
-
-            (
-                matching_skills,
-                missing_skills,
-                ai_score
-            ) = smart_skill_matching(
-                skills,
-                opportunity_text
-            )
-
-            opportunity = {
-
-                "title": title,
-
-                "link": link,
-
-                "snippet": snippet,
-
-                "organization": organization,
-
-                "location": location_text,
-
-                "deadline": deadline,
-
-                "score": ai_score,
-
-                "matching_skills": matching_skills,
-
-                "missing_skills": missing_skills,
-
-                "type": opportunity_type
-            }
-
-            formatted_results.append(
-                opportunity
-            )
-
-        st.session_state.search_results = (
-            formatted_results
-        )
+        st.session_state.raw_results = results
 
         st.success(
-            f"🎉 Found {len(formatted_results)} opportunities!"
+            f"🎉 Found {len(results)} opportunities!"
         )
 
+    else:
 
-# ============================================================
-#                    DASHBOARD
-# ============================================================
+        st.session_state.raw_results = []
 
-if st.session_state.search_results:
-
-    results = st.session_state.search_results
-
-    total_opportunities = len(
-        results
-    )
-
-    saved_count = len(
-        st.session_state.saved_opportunities
-    )
-
-    average_match = int(
-        sum(
-            item["score"]
-            for item in results
+        st.warning(
+            "No opportunities found. "
+            "Try changing your skills or opportunity type."
         )
-        / total_opportunities
-    )
-
-    st.markdown("---")
-
-    st.header(
-        "📊 Student Dashboard"
-    )
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-
-        st.metric(
-            "🎯 Opportunities Found",
-            total_opportunities
-        )
-
-    with col2:
-
-        st.metric(
-            "🔖 Saved",
-            saved_count
-        )
-
-    with col3:
-
-        st.metric(
-            "🤖 Average AI Match",
-            f"{average_match}%"
-        )
-
-
-    # ========================================================
-    #                      FILTERS
-    # ========================================================
-
-    st.markdown("---")
-
-    st.subheader(
-        "🔎 Filter Opportunities"
-    )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        search_text = st.text_input(
-            "Search by keyword",
-            placeholder=(
-                "Example: Python, AI, internship..."
-            )
-        )
-
-    with col2:
-
-        minimum_match = st.slider(
-            "Minimum AI Match",
-            0,
-            100,
-            0,
-            5
-        )
-
-
-    # ========================================================
-    #                  APPLY FILTER
-    # ========================================================
-
-    filtered_results = []
-
-    for item in results:
-
-        keyword_match = (
-            search_text.lower()
-            in (
-                item["title"]
-                + " "
-                + item["snippet"]
-                + " "
-                + item["organization"]
-            ).lower()
-        )
-
-        score_match = (
-            item["score"]
-            >= minimum_match
-        )
-
-        if (
-            keyword_match
-            and score_match
-        ):
-
-            filtered_results.append(
-                item
-            )
-
-
-    st.write(
-        f"Showing **{len(filtered_results)}** opportunities."
-    )
-
-
-    # ========================================================
-    #                  RESULT CARDS
-    # ========================================================
-
-    for index, item in enumerate(
-        filtered_results,
-        start=1
-    ):
-
-        st.markdown(
-            '<div class="card">',
-            unsafe_allow_html=True
-        )
-
-        st.markdown(
-            f'<div class="card-title">'
-            f'{index}. {item["title"]}'
-            f'</div>',
-            unsafe_allow_html=True
-        )
-
-        st.markdown(
-            f'<div class="info">'
-            f'🏢 <b>Organization:</b> '
-            f'{item["organization"]}'
-            f'</div>',
-            unsafe_allow_html=True
-        )
-
-        st.markdown(
-            f'<div class="info">'
-            f'📍 <b>Location:</b> '
-            f'{item["location"]}'
-            f'</div>',
-            unsafe_allow_html=True
-        )
-
-        st.markdown(
-            f'<div class="info">'
-            f'📅 <b>Deadline:</b> '
-            f'{item["deadline"]}'
-            f'</div>',
-            unsafe_allow_html=True
-        )
-
-
-        # ====================================================
-        #                AI MATCH SCORE
-        # ====================================================
-
-        st.markdown(
-            f'<div class="match">'
-            f'🤖 AI Match Score: '
-            f'{item["score"]}%'
-            f'</div>',
-            unsafe_allow_html=True
-        )
-
-        st.progress(
-            item["score"] / 100
-        )
-
-
-        # ====================================================
-        #              MATCHING SKILLS
-        # ====================================================
-
-        if item["matching_skills"]:
-
-            st.success(
-                "✅ Matching Skills: "
-                + ", ".join(
-                    item["matching_skills"]
-                )
-            )
-
-        else:
-
-            st.info(
-                "ℹ️ No direct matching skills detected."
-            )
-
-
-        # ====================================================
-        #                MISSING SKILLS
-        # ====================================================
-
-        if item["missing_skills"]:
-
-            st.warning(
-                "❌ Missing Skills: "
-                + ", ".join(
-                    item["missing_skills"]
-                )
-            )
-
-        else:
-
-            st.success(
-                "🎉 No major missing skills detected!"
-            )
-
-
-        # ====================================================
-        #                  DESCRIPTION
-        # ====================================================
-
-        st.write(
-            item["snippet"]
-        )
-
-
-        # ====================================================
-        #                     BUTTONS
-        # ====================================================
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-
-            if item["link"] != "#":
-
-                st.link_button(
-                    "🔗 View Opportunity",
-                    item["link"],
-                    use_container_width=True
-                )
-
-        with col2:
-
-            st.button(
-                "🔖 Save Opportunity",
-                key=f"save_{index}_{item['link']}",
-                on_click=save_opportunity,
-                args=(item,),
-                use_container_width=True
-            )
-
-
-        st.markdown(
-            '</div>',
-            unsafe_allow_html=True
-        )
-
-
-# ============================================================
-#                 SAVED OPPORTUNITIES
-# ============================================================
-
-if st.session_state.saved_opportunities:
-
-    st.markdown("---")
-
-    st.header(
-        "🔖 Saved Opportunities"
-    )
-
-    for index, item in enumerate(
-        st.session_state.saved_opportunities,
-        start=1
-    ):
-
-        st.markdown(
-            '<div class="card">',
-            unsafe_allow_html=True
-        )
-
-        st.subheader(
-            f"{index}. {item['title']}"
-        )
-
-        st.write(
-            f"🏢 **Organization:** "
-            f"{item['organization']}"
-        )
-
-        st.write(
-            f"📍 **Location:** "
-            f"{item['location']}"
-        )
-
-        st.write(
-            f"🤖 **AI Match Score:** "
-            f"{item['score']}%"
-        )
-
-
-        # Matching skills in saved section
-
-        if item.get(
-            "matching_skills"
-        ):
-
-            st.write(
-                "✅ **Matching Skills:** "
-                + ", ".join(
-                    item["matching_skills"]
-                )
-            )
-
-
-        # Missing skills in saved section
-
-        if item.get(
-            "missing_skills"
-        ):
-
-            st.write(
-                "❌ **Missing Skills:** "
-                + ", ".join(
-                    item["missing_skills"]
-                )
-            )
-
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-
-            st.link_button(
-                "🔗 Open Opportunity",
-                item["link"],
-                use_container_width=True
-            )
-
-        with col2:
-
-            st.button(
-                "❌ Remove",
-                key=f"remove_{index}",
-                on_click=remove_opportunity,
-                args=(item["link"],),
-                use_container_width=True
-            )
-
-        st.markdown(
-            '</div>',
-            unsafe_allow_html=True
-        )
-
-
-# ============================================================
-#                       FOOTER
-# ============================================================
-
-st.markdown("---")
-
-st.caption(
-    "OpportunityAI | Python • Streamlit • SerpApi • AI Smart Matching"
-)

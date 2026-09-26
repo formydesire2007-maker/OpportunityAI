@@ -123,9 +123,25 @@ def calculate_match(title, snippet):
 
 if search_button:
 
+   if opportunity_type == "Internships":
+    query = (
+        f"{skills} internship for {education} students "
+        f"{location} 2026 "
+        f"-site:linkedin.com -site:youtube.com"
+    )
+
+elif opportunity_type == "Jobs":
+    query = (
+        f"{skills} jobs for {education} graduates "
+        f"{location} 2026 "
+        f"-site:linkedin.com -site:youtube.com"
+    )
+
+else:
     query = (
         f"{opportunity_type} for {education} students "
-        f"{skills} {location} 2026 -site:linkedin.com -site:youtube.com"
+        f"{skills} {location} 2026 "
+        f"-site:linkedin.com -site:youtube.com"
     )
 
     st.info(f"Searching for: **{query}**")

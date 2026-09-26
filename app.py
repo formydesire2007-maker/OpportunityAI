@@ -55,6 +55,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+# ---------------- SESSION STATE ----------------
+
+if "saved_opportunities" not in st.session_state:
+    st.session_state.saved_opportunities = []
+
+
 # ---------------- HEADER ----------------
 
 st.markdown(
@@ -118,15 +124,32 @@ search_button = st.sidebar.button(
 )
 
 
+# ---------------- SAVED SECTION ----------------
+
+st.sidebar.markdown("---")
+
+st.sidebar.subheader("🔖 Saved Opportunities")
+
+saved_count = len(
+    st.session_state.saved_opportunities
+)
+
+st.sidebar.write(
+    f"You have saved **{saved_count}** opportunities."
+)
+
+
 # ---------------- SEARCH FUNCTION ----------------
 
 def search_serpapi(query):
 
     if not API_KEY:
+
         st.error(
             "SerpApi API key is not configured. "
             "Please add SERPAPI_KEY in Streamlit Secrets."
         )
+
         return []
 
     params = {
@@ -148,7 +171,11 @@ def search_serpapi(query):
         data = response.json()
 
         if "error" in data:
-            st.error(data["error"])
+
+            st.error(
+                data["error"]
+            )
+
             return []
 
         return data.get(
@@ -202,6 +229,47 @@ def calculate_match(title, snippet):
     )
 
     return score
+
+
+# ---------------- SAVE FUNCTION ----------------
+
+def save_opportunity(opportunity):
+
+    existing_links = [
+        item["link"]
+        for item in st.session_state.saved_opportunities
+    ]
+
+    if opportunity["link"] not in existing_links:
+
+        st.session_state.saved_opportunities.append(
+            opportunity
+        )
+
+        st.toast(
+            "🔖 Opportunity saved!"
+        )
+
+    else:
+
+        st.toast(
+            "Already saved!"
+        )
+
+
+# ---------------- REMOVE FUNCTION ----------------
+
+def remove_opportunity(link):
+
+    st.session_state.saved_opportunities = [
+        item
+        for item in st.session_state.saved_opportunities
+        if item["link"] != link
+    ]
+
+    st.toast(
+        "Opportunity removed."
+    )
 
 
 # ---------------- SEARCH ----------------
@@ -333,6 +401,17 @@ if search_button:
             )
 
 
+            opportunity = {
+                "title": title,
+                "link": link,
+                "snippet": snippet,
+                "organization": organization,
+                "location": location_text,
+                "deadline": deadline,
+                "score": score
+            }
+
+
             # -------- CARD --------
 
             st.markdown(
@@ -394,11 +473,30 @@ if search_button:
             )
 
 
-            if link != "#":
+            # -------- BUTTONS --------
 
-                st.link_button(
-                    "🔗 View Opportunity",
-                    link
+            col1, col2 = st.columns(2)
+
+
+            with col1:
+
+                if link != "#":
+
+                    st.link_button(
+                        "🔗 View Opportunity",
+                        link,
+                        use_container_width=True
+                    )
+
+
+            with col2:
+
+                st.button(
+                    "🔖 Save Opportunity",
+                    key=f"save_{index}_{link}",
+                    on_click=save_opportunity,
+                    args=(opportunity,),
+                    use_container_width=True
                 )
 
 
@@ -413,6 +511,74 @@ if search_button:
         st.warning(
             "No opportunities found. "
             "Try changing your skills or location."
+        )
+
+
+# ---------------- SAVED OPPORTUNITIES ----------------
+
+if st.session_state.saved_opportunities:
+
+    st.markdown("---")
+
+    st.header("🔖 Saved Opportunities")
+
+    st.write(
+        "Your bookmarked opportunities are shown below."
+    )
+
+
+    for index, item in enumerate(
+        st.session_state.saved_opportunities,
+        start=1
+    ):
+
+        st.markdown(
+            '<div class="card">',
+            unsafe_allow_html=True
+        )
+
+        st.subheader(
+            f"{index}. {item['title']}"
+        )
+
+        st.write(
+            f"🏢 **Organization:** "
+            f"{item['organization']}"
+        )
+
+        st.write(
+            f"📍 **Location:** "
+            f"{item['location']}"
+        )
+
+        st.write(
+            f"⭐ **Profile Match:** "
+            f"{item['score']}%"
+        )
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.link_button(
+                "🔗 Open Opportunity",
+                item["link"],
+                use_container_width=True
+            )
+
+        with col2:
+
+            st.button(
+                "❌ Remove",
+                key=f"remove_{index}",
+                on_click=remove_opportunity,
+                args=(item["link"],),
+                use_container_width=True
+            )
+
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
         )
 
 

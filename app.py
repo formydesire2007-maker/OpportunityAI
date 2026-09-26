@@ -2,9 +2,9 @@ import requests
 import streamlit as st
 
 
-# --------------------------------------------------
+# ==================================================
 # PAGE SETTINGS
-# --------------------------------------------------
+# ==================================================
 
 st.set_page_config(
     page_title="OpportunityAI",
@@ -13,29 +13,29 @@ st.set_page_config(
 )
 
 
-# --------------------------------------------------
-# TITLE
-# --------------------------------------------------
+# ==================================================
+# HEADER
+# ==================================================
 
 st.title("🎓 OpportunityAI")
 st.subheader("Smart Student Opportunity Navigator")
 
 st.write(
-    "Find internships, scholarships, hackathons, competitions, "
-    "certifications, and jobs using live web search."
+    "Find internships, jobs, scholarships, hackathons, "
+    "competitions, and certifications using live web search."
 )
 
 
-# --------------------------------------------------
-# SERPAPI KEY
-# --------------------------------------------------
+# ==================================================
+# SERPAPI API KEY
+# ==================================================
 
 API_KEY = st.secrets.get("SERPAPI_KEY")
 
 
-# --------------------------------------------------
+# ==================================================
 # STUDENT PROFILE
-# --------------------------------------------------
+# ==================================================
 
 st.sidebar.header("👩‍🎓 Student Profile")
 
@@ -58,20 +58,22 @@ opportunity_type = st.sidebar.selectbox(
     "Opportunity Type",
     [
         "Internships",
+        "Jobs",
         "Scholarships",
         "Hackathons",
         "Competitions",
-        "Certifications",
-        "Jobs"
+        "Certifications"
     ]
 )
 
-search_button = st.button("🔎 Find Opportunities")
+search_button = st.button(
+    "🔎 Find Opportunities"
+)
 
 
-# --------------------------------------------------
+# ==================================================
 # SERPAPI SEARCH FUNCTION
-# --------------------------------------------------
+# ==================================================
 
 def search_serpapi(query):
 
@@ -79,7 +81,7 @@ def search_serpapi(query):
 
         st.error(
             "SerpApi API key is not configured. "
-            "Please add SERPAPI_KEY to Streamlit Secrets."
+            "Please add SERPAPI_KEY in Streamlit Secrets."
         )
 
         return []
@@ -87,8 +89,8 @@ def search_serpapi(query):
     params = {
         "engine": "google",
         "q": query,
-        "safe": "active",
         "api_key": API_KEY,
+        "safe": "active",
         "num": 10
     }
 
@@ -104,7 +106,9 @@ def search_serpapi(query):
 
         if "error" in data:
 
-            st.error(data["error"])
+            st.error(
+                data["error"]
+            )
 
             return []
 
@@ -122,9 +126,9 @@ def search_serpapi(query):
         return []
 
 
-# --------------------------------------------------
+# ==================================================
 # PROFILE MATCH FUNCTION
-# --------------------------------------------------
+# ==================================================
 
 def calculate_match(title, snippet):
 
@@ -168,13 +172,16 @@ def calculate_match(title, snippet):
     return score
 
 
-# --------------------------------------------------
-# SEARCH
-# --------------------------------------------------
+# ==================================================
+# SEARCH BUTTON
+# ==================================================
 
 if search_button:
 
-    # Internship search
+    # ------------------------------------------------
+    # INTERNSHIPS
+    # ------------------------------------------------
+
     if opportunity_type == "Internships":
 
         query = (
@@ -185,44 +192,103 @@ if search_button:
             f"-site:youtube.com"
         )
 
-    # Jobs search
-    
-      elif opportunity_type == "Jobs":
 
-    query = (
-        f"{skills} fresher jobs "
-        f"{education} students "
-        f"{location} 2026 "
-        f"-site:linkedin.com "
-        f"-site:youtube.com"
-    )
+    # ------------------------------------------------
+    # JOBS
+    # ------------------------------------------------
 
-    # Other opportunities
-    else:
+    elif opportunity_type == "Jobs":
 
         query = (
-            f"{opportunity_type} "
+            f"{skills} fresher jobs "
             f"for {education} students "
-            f"{skills} "
             f"{location} 2026 "
             f"-site:linkedin.com "
             f"-site:youtube.com"
         )
 
 
-    # Show search query
+    # ------------------------------------------------
+    # SCHOLARSHIPS
+    # ------------------------------------------------
+
+    elif opportunity_type == "Scholarships":
+
+        query = (
+            f"{education} scholarships "
+            f"for students "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
+        )
+
+
+    # ------------------------------------------------
+    # HACKATHONS
+    # ------------------------------------------------
+
+    elif opportunity_type == "Hackathons":
+
+        query = (
+            f"{skills} hackathons "
+            f"for students "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
+        )
+
+
+    # ------------------------------------------------
+    # COMPETITIONS
+    # ------------------------------------------------
+
+    elif opportunity_type == "Competitions":
+
+        query = (
+            f"{skills} competitions "
+            f"for {education} students "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
+        )
+
+
+    # ------------------------------------------------
+    # CERTIFICATIONS
+    # ------------------------------------------------
+
+    else:
+
+        query = (
+            f"{skills} free certifications "
+            f"for {education} students "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
+        )
+
+
+    # ==================================================
+    # SHOW SEARCH QUERY
+    # ==================================================
+
     st.info(
         f"Searching for: **{query}**"
     )
 
 
-    # Search SerpApi
-    results = search_serpapi(query)
+    # ==================================================
+    # GET RESULTS
+    # ==================================================
+
+    results = search_serpapi(
+        query
+    )
 
 
-    # --------------------------------------------------
-    # RESULTS
-    # --------------------------------------------------
+    # ==================================================
+    # DISPLAY RESULTS
+    # ==================================================
 
     if results:
 
@@ -236,15 +302,29 @@ if search_button:
             start=1
         ):
 
+            # ------------------------------------------
+            # TITLE
+            # ------------------------------------------
+
             title = result.get(
                 "title",
                 "Opportunity"
             )
 
+
+            # ------------------------------------------
+            # LINK
+            # ------------------------------------------
+
             link = result.get(
                 "link",
                 "#"
             )
+
+
+            # ------------------------------------------
+            # DESCRIPTION
+            # ------------------------------------------
 
             snippet = result.get(
                 "snippet",
@@ -252,37 +332,49 @@ if search_button:
             )
 
 
-            # Profile score
-            score = calculate_match(
-                title,
-                snippet
-            )
+            # ------------------------------------------
+            # ORGANIZATION
+            # ------------------------------------------
 
-
-            # Organization
             organization = result.get(
                 "source",
                 "Not specified"
             )
 
 
-            # Location
+            # ------------------------------------------
+            # LOCATION
+            # ------------------------------------------
+
             location_text = result.get(
                 "location",
-                "Not specified"
+                location
             )
 
 
-            # Deadline
+            # ------------------------------------------
+            # DEADLINE
+            # ------------------------------------------
+
             deadline = result.get(
                 "deadline",
-                "Not specified"
+                "Check official website"
             )
 
 
-            # --------------------------------------------------
-            # DISPLAY RESULT
-            # --------------------------------------------------
+            # ------------------------------------------
+            # PROFILE MATCH
+            # ------------------------------------------
+
+            score = calculate_match(
+                title,
+                snippet
+            )
+
+
+            # ------------------------------------------
+            # RESULT CARD
+            # ------------------------------------------
 
             st.markdown("---")
 
@@ -319,24 +411,29 @@ if search_button:
                 text=f"Profile Match: {score}%"
             )
 
-            st.link_button(
-                "🔗 View Opportunity",
-                link
-            )
+            if link != "#":
 
+                st.link_button(
+                    "🔗 View Opportunity",
+                    link
+                )
+
+
+    # ==================================================
+    # NO RESULTS
+    # ==================================================
 
     else:
 
         st.warning(
             "No opportunities found. "
-            "Try changing your skills, "
-            "location, or opportunity type."
+            "Try changing your skills or location."
         )
 
 
-# --------------------------------------------------
+# ==================================================
 # FOOTER
-# --------------------------------------------------
+# ==================================================
 
 st.markdown("---")
 

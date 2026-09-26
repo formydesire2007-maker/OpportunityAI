@@ -32,6 +32,36 @@ st.markdown("""
     margin-bottom: 25px;
 }
 
+.hero-box {
+    padding: 30px;
+    border-radius: 20px;
+    margin-top: 10px;
+    margin-bottom: 25px;
+    background: linear-gradient(135deg, #eef4ff, #f8f1ff);
+    border: 1px solid #e1e5f2;
+}
+
+.hero-title {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.hero-text {
+    font-size: 17px;
+    color: #555;
+    line-height: 1.6;
+}
+
+.feature-box {
+    padding: 18px;
+    border-radius: 15px;
+    background-color: #ffffff;
+    border: 1px solid #e2e2e2;
+    text-align: center;
+    margin-top: 10px;
+}
+
 .card {
     padding: 22px;
     border-radius: 15px;
@@ -91,11 +121,96 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+
+# ============================================================
+# HERO SECTION
+# ============================================================
+
+hero_col1, hero_col2 = st.columns([1.25, 1])
+
+with hero_col1:
+
+    st.markdown("""
+    <div class="hero-box">
+
+        <div class="hero-title">
+            🚀 Find Your Next Opportunity
+        </div>
+
+        <div class="hero-text">
+            Discover internships, jobs, scholarships,
+            hackathons, competitions and certifications
+            based on your education, skills and location.
+        </div>
+
+        <br>
+
+        <div class="hero-text">
+            🤖 AI Skill Matching &nbsp; • &nbsp;
+            🎯 AI Match Score &nbsp; • &nbsp;
+            📚 Skill Gap Suggestions
+        </div>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+
+with hero_col2:
+
+    st.image(
+        "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=85",
+        use_container_width=True
+    )
+
+
 st.write(
     "🔎 Discover internships, jobs, scholarships, "
     "hackathons, competitions and certifications "
     "based on your profile."
 )
+
+
+# ============================================================
+# QUICK FEATURES
+# ============================================================
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.markdown("""
+    <div class="feature-box">
+        🎓<br>
+        <b>Student Profile</b><br>
+        Education & Skills
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+    <div class="feature-box">
+        🔎<br>
+        <b>Smart Search</b><br>
+        Powered by SerpApi
+    </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown("""
+    <div class="feature-box">
+        🤖<br>
+        <b>AI Matching</b><br>
+        Match Score
+    </div>
+    """, unsafe_allow_html=True)
+
+with col4:
+    st.markdown("""
+    <div class="feature-box">
+        📚<br>
+        <b>Skill Gap</b><br>
+        Improve Your Skills
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ============================================================
@@ -996,7 +1111,6 @@ if st.session_state.search_results:
             filtered_results.append(
                 item
             )
-
 
     st.write(
         f"Showing **{len(filtered_results)}** opportunities."

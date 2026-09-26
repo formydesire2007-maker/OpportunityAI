@@ -186,15 +186,16 @@ if search_button:
         )
 
     # Jobs search
-    elif opportunity_type == "Jobs":
+    
+      elif opportunity_type == "Jobs":
 
-        query = (
-            f"{skills} jobs "
-            f"for {education} graduates "
-            f"{location} 2026 "
-            f"-site:linkedin.com "
-            f"-site:youtube.com"
-        )
+    query = (
+        f"{skills} fresher jobs "
+        f"{education} students "
+        f"{location} 2026 "
+        f"-site:linkedin.com "
+        f"-site:youtube.com"
+    )
 
     # Other opportunities
     else:

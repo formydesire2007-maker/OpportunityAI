@@ -1,26 +1,42 @@
-import os
 import requests
 import streamlit as st
 
+
+# --------------------------------------------------
+# PAGE SETTINGS
+# --------------------------------------------------
+
 st.set_page_config(
     page_title="OpportunityAI",
-    
     page_icon="🎓",
     layout="wide"
 )
+
+
+# --------------------------------------------------
+# TITLE
+# --------------------------------------------------
 
 st.title("🎓 OpportunityAI")
 st.subheader("Smart Student Opportunity Navigator")
 
 st.write(
     "Find internships, scholarships, hackathons, competitions, "
-    "and certifications using live web search."
+    "certifications, and jobs using live web search."
 )
 
-# Get SerpApi key securely 
+
+# --------------------------------------------------
+# SERPAPI KEY
+# --------------------------------------------------
+
 API_KEY = st.secrets.get("SERPAPI_KEY")
 
-# Student profile
+
+# --------------------------------------------------
+# STUDENT PROFILE
+# --------------------------------------------------
+
 st.sidebar.header("👩‍🎓 Student Profile")
 
 education = st.sidebar.text_input(
@@ -53,26 +69,31 @@ opportunity_type = st.sidebar.selectbox(
 search_button = st.button("🔎 Find Opportunities")
 
 
+# --------------------------------------------------
+# SERPAPI SEARCH FUNCTION
+# --------------------------------------------------
+
 def search_serpapi(query):
-    """Search Google through SerpApi."""
 
     if not API_KEY:
+
         st.error(
             "SerpApi API key is not configured. "
-            "Please add SERPAPI_KEY to your environment."
+            "Please add SERPAPI_KEY to Streamlit Secrets."
         )
+
         return []
 
     params = {
         "engine": "google",
         "q": query,
         "safe": "active",
-        "site": "-linkedin.com -youtube.com",
         "api_key": API_KEY,
         "num": 10
     }
 
     try:
+
         response = requests.get(
             "https://serpapi.com/search.json",
             params=params,
@@ -82,20 +103,34 @@ def search_serpapi(query):
         data = response.json()
 
         if "error" in data:
+
             st.error(data["error"])
+
             return []
 
-        return data.get("organic_results", [])
+        return data.get(
+            "organic_results",
+            []
+        )
 
     except Exception as e:
-        st.error(f"Search failed: {e}")
+
+        st.error(
+            f"Search failed: {e}"
+        )
+
         return []
 
 
-def calculate_match(title, snippet):
-    """Simple profile-based relevance score."""
+# --------------------------------------------------
+# PROFILE MATCH FUNCTION
+# --------------------------------------------------
 
-    text = (title + " " + snippet).lower()
+def calculate_match(title, snippet):
+
+    text = (
+        title + " " + snippet
+    ).lower()
 
     keywords = []
 
@@ -104,49 +139,89 @@ def calculate_match(title, snippet):
     )
 
     keywords.extend(
-        skills.lower().replace(",", " ").split()
+        skills.lower()
+        .replace(",", " ")
+        .split()
     )
 
-    keywords.append(location.lower())
-    keywords.append(opportunity_type.lower())
+    keywords.append(
+        location.lower()
+    )
+
+    keywords.append(
+        opportunity_type.lower()
+    )
 
     matches = 0
 
     for word in keywords:
+
         if len(word) > 2 and word in text:
+
             matches += 1
 
-    score = min(95, 40 + matches * 10)
+    score = min(
+        95,
+        40 + matches * 10
+    )
 
     return score
 
 
+# --------------------------------------------------
+# SEARCH
+# --------------------------------------------------
+
 if search_button:
 
-   if opportunity_type == "Internships":
-    query = (
-        f"{skills} internship for {education} students "
-        f"{location} 2026 "
-        f"-site:linkedin.com -site:youtube.com"
+    # Internship search
+    if opportunity_type == "Internships":
+
+        query = (
+            f"{skills} internship "
+            f"for {education} students "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
+        )
+
+    # Jobs search
+    elif opportunity_type == "Jobs":
+
+        query = (
+            f"{skills} jobs "
+            f"for {education} graduates "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
+        )
+
+    # Other opportunities
+    else:
+
+        query = (
+            f"{opportunity_type} "
+            f"for {education} students "
+            f"{skills} "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
+        )
+
+
+    # Show search query
+    st.info(
+        f"Searching for: **{query}**"
     )
 
-elif opportunity_type == "Jobs":
-    query = (
-        f"{skills} jobs for {education} graduates "
-        f"{location} 2026 "
-        f"-site:linkedin.com -site:youtube.com"
-    )
 
-else:
-    query = (
-        f"{opportunity_type} for {education} students "
-        f"{skills} {location} 2026 "
-        f"-site:linkedin.com -site:youtube.com"
-    )
-
-    st.info(f"Searching for: **{query}**")
-
+    # Search SerpApi
     results = search_serpapi(query)
+
+
+    # --------------------------------------------------
+    # RESULTS
+    # --------------------------------------------------
 
     if results:
 
@@ -154,7 +229,11 @@ else:
             f"Found {len(results)} opportunities!"
         )
 
-        for index, result in enumerate(results, start=1):
+
+        for index, result in enumerate(
+            results,
+            start=1
+        ):
 
             title = result.get(
                 "title",
@@ -171,17 +250,20 @@ else:
                 "No description available."
             )
 
+
+            # Profile score
             score = calculate_match(
                 title,
                 snippet
             )
 
-            st.markdown("---")
+
             # Organization
             organization = result.get(
                 "source",
                 "Not specified"
             )
+
 
             # Location
             location_text = result.get(
@@ -189,30 +271,47 @@ else:
                 "Not specified"
             )
 
+
             # Deadline
             deadline = result.get(
                 "deadline",
                 "Not specified"
             )
 
-            st.subheader(f"{index}. {title}")
 
-            st.write(f"🏢 **Organization:** {organization}")
-            st.write(f"📍 **Location:** {location_text}")
-            st.write(f"📅 **Deadline:** {deadline}")
+            # --------------------------------------------------
+            # DISPLAY RESULT
+            # --------------------------------------------------
 
-            st.write(f"⭐ **Profile Match:** {score}%")
+            st.markdown("---")
 
-            st.link_button(
-                "🔗 View Opportunity",
-                link
+            st.subheader(
+                f"{index}. {title}"
             )
 
-            st.markdown(
-                f"### {index}. {title}"
+            st.write(
+                f"🏢 **Organization:** "
+                f"{organization}"
             )
 
-            st.write(snippet)
+            st.write(
+                f"📍 **Location:** "
+                f"{location_text}"
+            )
+
+            st.write(
+                f"📅 **Deadline:** "
+                f"{deadline}"
+            )
+
+            st.write(
+                f"⭐ **Profile Match:** "
+                f"{score}%"
+            )
+
+            st.write(
+                snippet
+            )
 
             st.progress(
                 score / 100,
@@ -224,15 +323,23 @@ else:
                 link
             )
 
+
     else:
+
         st.warning(
             "No opportunities found. "
-            "Try changing your skills or opportunity type."
+            "Try changing your skills, "
+            "location, or opportunity type."
         )
 
+
+# --------------------------------------------------
+# FOOTER
+# --------------------------------------------------
 
 st.markdown("---")
 
 st.caption(
-    "OpportunityAI | Built with Python, Streamlit and SerpApi"
-                   )
+    "OpportunityAI | Built with Python, "
+    "Streamlit and SerpApi"
+)

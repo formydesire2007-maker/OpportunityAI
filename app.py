@@ -1,10 +1,7 @@
 import requests
 import streamlit as st
 
-
-# ==================================================
-# PAGE SETTINGS
-# ==================================================
+# ---------------- PAGE CONFIG ----------------
 
 st.set_page_config(
     page_title="OpportunityAI",
@@ -12,30 +9,79 @@ st.set_page_config(
     layout="wide"
 )
 
+# ---------------- CUSTOM CSS ----------------
 
-# ==================================================
-# HEADER
-# ==================================================
+st.markdown("""
+<style>
 
-st.title("🎓 OpportunityAI")
-st.subheader("Smart Student Opportunity Navigator")
+.main-title {
+    font-size: 42px;
+    font-weight: 700;
+    margin-bottom: 0px;
+}
+
+.subtitle {
+    font-size: 20px;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+.card {
+    padding: 22px;
+    border-radius: 15px;
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    background-color: #ffffff;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+}
+
+.card-title {
+    font-size: 23px;
+    font-weight: 650;
+    margin-bottom: 12px;
+}
+
+.info {
+    font-size: 15px;
+    margin: 6px 0;
+}
+
+.match {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# ---------------- HEADER ----------------
+
+st.markdown(
+    '<div class="main-title">🎓 OpportunityAI</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<div class="subtitle">'
+    'Smart Student Opportunity Navigator'
+    '</div>',
+    unsafe_allow_html=True
+)
 
 st.write(
-    "Find internships, jobs, scholarships, hackathons, "
-    "competitions, and certifications using live web search."
+    "🔎 Discover internships, jobs, scholarships, "
+    "hackathons, competitions and certifications "
+    "based on your profile."
 )
 
 
-# ==================================================
-# SERPAPI API KEY
-# ==================================================
+# ---------------- API KEY ----------------
 
 API_KEY = st.secrets.get("SERPAPI_KEY")
 
 
-# ==================================================
-# STUDENT PROFILE
-# ==================================================
+# ---------------- SIDEBAR ----------------
 
 st.sidebar.header("👩‍🎓 Student Profile")
 
@@ -66,24 +112,21 @@ opportunity_type = st.sidebar.selectbox(
     ]
 )
 
-search_button = st.button(
-    "🔎 Find Opportunities"
+search_button = st.sidebar.button(
+    "🔎 Find Opportunities",
+    use_container_width=True
 )
 
 
-# ==================================================
-# SERPAPI SEARCH FUNCTION
-# ==================================================
+# ---------------- SEARCH FUNCTION ----------------
 
 def search_serpapi(query):
 
     if not API_KEY:
-
         st.error(
             "SerpApi API key is not configured. "
             "Please add SERPAPI_KEY in Streamlit Secrets."
         )
-
         return []
 
     params = {
@@ -105,11 +148,7 @@ def search_serpapi(query):
         data = response.json()
 
         if "error" in data:
-
-            st.error(
-                data["error"]
-            )
-
+            st.error(data["error"])
             return []
 
         return data.get(
@@ -126,9 +165,7 @@ def search_serpapi(query):
         return []
 
 
-# ==================================================
-# PROFILE MATCH FUNCTION
-# ==================================================
+# ---------------- MATCH SCORE ----------------
 
 def calculate_match(title, snippet):
 
@@ -152,16 +189,11 @@ def calculate_match(title, snippet):
         location.lower()
     )
 
-    keywords.append(
-        opportunity_type.lower()
-    )
-
     matches = 0
 
     for word in keywords:
 
         if len(word) > 2 and word in text:
-
             matches += 1
 
     score = min(
@@ -172,15 +204,11 @@ def calculate_match(title, snippet):
     return score
 
 
-# ==================================================
-# SEARCH BUTTON
-# ==================================================
+# ---------------- SEARCH ----------------
 
 if search_button:
 
-    # ------------------------------------------------
-    # INTERNSHIPS
-    # ------------------------------------------------
+    # -------- QUERY TYPES --------
 
     if opportunity_type == "Internships":
 
@@ -192,11 +220,6 @@ if search_button:
             f"-site:youtube.com"
         )
 
-
-    # ------------------------------------------------
-    # JOBS
-    # ------------------------------------------------
-
     elif opportunity_type == "Jobs":
 
         query = (
@@ -206,11 +229,6 @@ if search_button:
             f"-site:linkedin.com "
             f"-site:youtube.com"
         )
-
-
-    # ------------------------------------------------
-    # SCHOLARSHIPS
-    # ------------------------------------------------
 
     elif opportunity_type == "Scholarships":
 
@@ -222,11 +240,6 @@ if search_button:
             f"-site:youtube.com"
         )
 
-
-    # ------------------------------------------------
-    # HACKATHONS
-    # ------------------------------------------------
-
     elif opportunity_type == "Hackathons":
 
         query = (
@@ -237,11 +250,6 @@ if search_button:
             f"-site:youtube.com"
         )
 
-
-    # ------------------------------------------------
-    # COMPETITIONS
-    # ------------------------------------------------
-
     elif opportunity_type == "Competitions":
 
         query = (
@@ -251,11 +259,6 @@ if search_button:
             f"-site:linkedin.com "
             f"-site:youtube.com"
         )
-
-
-    # ------------------------------------------------
-    # CERTIFICATIONS
-    # ------------------------------------------------
 
     else:
 
@@ -268,103 +271,61 @@ if search_button:
         )
 
 
-    # ==================================================
-    # SHOW SEARCH QUERY
-    # ==================================================
+    # -------- SEARCH INFO --------
 
     st.info(
-        f"Searching for: **{query}**"
+        f"🔎 Searching for: **{query}**"
     )
 
 
-    # ==================================================
-    # GET RESULTS
-    # ==================================================
+    # -------- GET RESULTS --------
 
-    results = search_serpapi(
-        query
-    )
+    results = search_serpapi(query)
 
-
-    # ==================================================
-    # DISPLAY RESULTS
-    # ==================================================
 
     if results:
 
         st.success(
-            f"Found {len(results)} opportunities!"
+            f"🎉 Found {len(results)} opportunities!"
         )
 
+
+        # -------- RESULT CARDS --------
 
         for index, result in enumerate(
             results,
             start=1
         ):
 
-            # ------------------------------------------
-            # TITLE
-            # ------------------------------------------
-
             title = result.get(
                 "title",
                 "Opportunity"
             )
-
-
-            # ------------------------------------------
-            # LINK
-            # ------------------------------------------
 
             link = result.get(
                 "link",
                 "#"
             )
 
-
-            # ------------------------------------------
-            # DESCRIPTION
-            # ------------------------------------------
-
             snippet = result.get(
                 "snippet",
                 "No description available."
             )
-
-
-            # ------------------------------------------
-            # ORGANIZATION
-            # ------------------------------------------
 
             organization = result.get(
                 "source",
                 "Not specified"
             )
 
-
-            # ------------------------------------------
-            # LOCATION
-            # ------------------------------------------
-
             location_text = result.get(
                 "location",
                 location
             )
 
-
-            # ------------------------------------------
-            # DEADLINE
-            # ------------------------------------------
-
             deadline = result.get(
                 "deadline",
                 "Check official website"
             )
-
-
-            # ------------------------------------------
-            # PROFILE MATCH
-            # ------------------------------------------
 
             score = calculate_match(
                 title,
@@ -372,44 +333,66 @@ if search_button:
             )
 
 
-            # ------------------------------------------
-            # RESULT CARD
-            # ------------------------------------------
+            # -------- CARD --------
 
-            st.markdown("---")
-
-            st.subheader(
-                f"{index}. {title}"
+            st.markdown(
+                '<div class="card">',
+                unsafe_allow_html=True
             )
 
-            st.write(
-                f"🏢 **Organization:** "
-                f"{organization}"
+
+            st.markdown(
+                f'<div class="card-title">'
+                f'{index}. {title}'
+                f'</div>',
+                unsafe_allow_html=True
             )
 
-            st.write(
-                f"📍 **Location:** "
-                f"{location_text}"
+
+            st.markdown(
+                f'<div class="info">'
+                f'🏢 <b>Organization:</b> '
+                f'{organization}'
+                f'</div>',
+                unsafe_allow_html=True
             )
 
-            st.write(
-                f"📅 **Deadline:** "
-                f"{deadline}"
+
+            st.markdown(
+                f'<div class="info">'
+                f'📍 <b>Location:</b> '
+                f'{location_text}'
+                f'</div>',
+                unsafe_allow_html=True
             )
 
-            st.write(
-                f"⭐ **Profile Match:** "
-                f"{score}%"
+
+            st.markdown(
+                f'<div class="info">'
+                f'📅 <b>Deadline:</b> '
+                f'{deadline}'
+                f'</div>',
+                unsafe_allow_html=True
             )
+
+
+            st.markdown(
+                f'<div class="match">'
+                f'⭐ Profile Match: {score}%'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+
+
+            st.progress(
+                score / 100
+            )
+
 
             st.write(
                 snippet
             )
 
-            st.progress(
-                score / 100,
-                text=f"Profile Match: {score}%"
-            )
 
             if link != "#":
 
@@ -419,9 +402,11 @@ if search_button:
                 )
 
 
-    # ==================================================
-    # NO RESULTS
-    # ==================================================
+            st.markdown(
+                '</div>',
+                unsafe_allow_html=True
+            )
+
 
     else:
 
@@ -431,13 +416,10 @@ if search_button:
         )
 
 
-# ==================================================
-# FOOTER
-# ==================================================
+# ---------------- FOOTER ----------------
 
 st.markdown("---")
 
 st.caption(
-    "OpportunityAI | Built with Python, "
-    "Streamlit and SerpApi"
+    "OpportunityAI | Python • Streamlit • SerpApi"
 )

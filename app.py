@@ -1,9 +1,9 @@
 import requests
 import streamlit as st
-import re
+
 
 # ============================================================
-#                    PAGE CONFIG
+# PAGE CONFIG
 # ============================================================
 
 st.set_page_config(
@@ -14,7 +14,7 @@ st.set_page_config(
 
 
 # ============================================================
-#                    CUSTOM CSS
+# CUSTOM CSS
 # ============================================================
 
 st.markdown("""
@@ -37,7 +37,7 @@ st.markdown("""
     border-radius: 15px;
     border: 1px solid #ddd;
     margin-bottom: 20px;
-    background-color: #ffffff;
+    background-color: white;
     box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
 }
 
@@ -57,20 +57,12 @@ st.markdown("""
     font-weight: 600;
 }
 
-.ai-box {
-    padding: 15px;
-    border-radius: 12px;
-    border: 1px solid #ddd;
-    margin-top: 12px;
-    margin-bottom: 12px;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
 
 # ============================================================
-#                    SESSION STATE
+# SESSION STATE
 # ============================================================
 
 if "saved_opportunities" not in st.session_state:
@@ -79,9 +71,12 @@ if "saved_opportunities" not in st.session_state:
 if "search_results" not in st.session_state:
     st.session_state.search_results = []
 
+if "raw_results" not in st.session_state:
+    st.session_state.raw_results = []
+
 
 # ============================================================
-#                       HEADER
+# HEADER
 # ============================================================
 
 st.markdown(
@@ -104,36 +99,32 @@ st.write(
 
 
 # ============================================================
-#                       API KEY
+# API KEY
 # ============================================================
 
 API_KEY = st.secrets.get("SERPAPI_KEY")
 
 
 # ============================================================
-#                       SIDEBAR
+# SIDEBAR
 # ============================================================
 
 st.sidebar.header("👩‍🎓 Student Profile")
-
 
 education = st.sidebar.text_input(
     "Education",
     "B.Tech"
 )
 
-
 skills = st.sidebar.text_input(
     "Skills",
     "Python, AI, Machine Learning"
 )
 
-
 location = st.sidebar.text_input(
     "Preferred Location",
     "India"
 )
-
 
 opportunity_type = st.sidebar.selectbox(
     "Opportunity Type",
@@ -147,7 +138,6 @@ opportunity_type = st.sidebar.selectbox(
     ]
 )
 
-
 search_button = st.sidebar.button(
     "🔎 Find Opportunities",
     use_container_width=True
@@ -155,7 +145,7 @@ search_button = st.sidebar.button(
 
 
 # ============================================================
-#                  SAVED COUNT
+# SAVED COUNT
 # ============================================================
 
 st.sidebar.markdown("---")
@@ -170,7 +160,7 @@ st.sidebar.write(
 
 
 # ============================================================
-#                  SEARCH FUNCTION
+# SEARCH FUNCTION
 # ============================================================
 
 def search_serpapi(query):
@@ -184,15 +174,10 @@ def search_serpapi(query):
         return []
 
     params = {
-
         "engine": "google",
-
         "q": query,
-
         "api_key": API_KEY,
-
         "safe": "active",
-
         "num": 10
     }
 
@@ -206,7 +191,6 @@ def search_serpapi(query):
 
         data = response.json()
 
-
         if "error" in data:
 
             st.error(
@@ -215,12 +199,10 @@ def search_serpapi(query):
 
             return []
 
-
         return data.get(
             "organic_results",
             []
         )
-
 
     except Exception as e:
 
@@ -232,205 +214,50 @@ def search_serpapi(query):
 
 
 # ============================================================
-#                       SEARCH
-# ============================================================
-
-if search_button:
-
-    # --------------------------------------------------------
-    # INTERNSHIPS
-    # --------------------------------------------------------
-
-    if opportunity_type == "Internships":
-
-        query = (
-            f"{skills} internship "
-            f"for {education} students "
-            f"{location} 2026 "
-            f"-site:linkedin.com "
-            f"-site:youtube.com"
-        )
-
-
-    # --------------------------------------------------------
-    # JOBS
-    # --------------------------------------------------------
-
-    elif opportunity_type == "Jobs":
-
-        query = (
-            f"{skills} fresher jobs "
-            f"for {education} students "
-            f"{location} 2026 "
-            f"-site:linkedin.com "
-            f"-site:youtube.com"
-        )
-
-
-    # --------------------------------------------------------
-    # SCHOLARSHIPS
-    # --------------------------------------------------------
-
-    elif opportunity_type == "Scholarships":
-
-        query = (
-            f"{education} scholarships "
-            f"for students "
-            f"{location} 2026 "
-            f"-site:linkedin.com "
-            f"-site:youtube.com"
-        )
-
-
-    # --------------------------------------------------------
-    # HACKATHONS
-    # --------------------------------------------------------
-
-    elif opportunity_type == "Hackathons":
-
-        query = (
-            f"{skills} hackathons "
-            f"for students "
-            f"{location} 2026 "
-            f"-site:linkedin.com "
-            f"-site:youtube.com"
-        )
-
-
-    # --------------------------------------------------------
-    # COMPETITIONS
-    # --------------------------------------------------------
-
-    elif opportunity_type == "Competitions":
-
-        query = (
-            f"{skills} competitions "
-            f"for {education} students "
-            f"{location} 2026 "
-            f"-site:linkedin.com "
-            f"-site:youtube.com"
-        )
-
-
-    # --------------------------------------------------------
-    # CERTIFICATIONS
-    # --------------------------------------------------------
-
-    else:
-
-        query = (
-            f"{skills} free certifications "
-            f"for {education} students "
-            f"{location} 2026 "
-            f"-site:linkedin.com "
-            f"-site:youtube.com"
-        )
-
-
-    # --------------------------------------------------------
-    # SHOW SEARCH QUERY
-    # --------------------------------------------------------
-
-    st.info(
-        f"🔎 Searching for: **{query}**"
-    )
-
-
-    # --------------------------------------------------------
-    # SEARCH SERPAPI
-    # --------------------------------------------------------
-
-    results = search_serpapi(
-        query
-    )
-
-
-    # --------------------------------------------------------
-    # STORE RAW RESULTS
-    # --------------------------------------------------------
-
-    if results:
-
-        st.session_state.raw_results = results
-
-        st.success(
-            f"🎉 Found {len(results)} opportunities!"
-        )
-
-    else:
-
-        st.session_state.raw_results = []
-
-        st.warning(
-            "No opportunities found. "
-            "Try changing your skills or opportunity type."
-        )
-        # ============================================================
-#                  AI SMART SKILL MATCHING
+# AI SKILL DATABASE
 # ============================================================
 
 def extract_skills(text):
 
-    """
-    Detect commonly used technical skills
-    from opportunity title and description.
-    """
-
     text = text.lower()
 
     skill_database = [
-
         "python",
         "java",
         "c",
         "c++",
         "javascript",
-
         "html",
         "css",
-
         "sql",
-
         "machine learning",
         "deep learning",
-
         "artificial intelligence",
         "ai",
         "ml",
-
         "data science",
         "data analysis",
-
         "tensorflow",
         "pytorch",
-
         "flask",
         "django",
-
         "react",
         "node.js",
-
         "git",
         "github",
-
         "aws",
         "azure",
         "cloud",
-
         "docker",
         "kubernetes",
-
         "mongodb",
         "mysql",
-
         "excel",
         "power bi",
         "tableau",
-
         "nlp",
         "computer vision",
         "opencv",
-
         "android",
         "flutter"
     ]
@@ -451,7 +278,7 @@ def extract_skills(text):
 
 
 # ============================================================
-#                    SMART MATCHING
+# SMART SKILL MATCHING
 # ============================================================
 
 def smart_skill_matching(
@@ -459,32 +286,15 @@ def smart_skill_matching(
     opportunity_text
 ):
 
-    # --------------------------------------------------------
-    # STUDENT SKILLS
-    # --------------------------------------------------------
-
     student_skills_list = [
-
         skill.strip().lower()
-
         for skill in student_skills.split(",")
-
         if skill.strip()
     ]
-
-
-    # --------------------------------------------------------
-    # OPPORTUNITY REQUIRED SKILLS
-    # --------------------------------------------------------
 
     required_skills = extract_skills(
         opportunity_text
     )
-
-
-    # --------------------------------------------------------
-    # MATCHING SKILLS
-    # --------------------------------------------------------
 
     matching_skills = []
 
@@ -492,19 +302,10 @@ def smart_skill_matching(
 
         for required_skill in required_skills:
 
-            student_clean = (
-                student_skill.lower()
-            )
-
-            required_clean = (
-                required_skill.lower()
-            )
-
-
             if (
-                student_clean == required_clean
-                or student_clean in required_clean
-                or required_clean in student_clean
+                student_skill == required_skill
+                or student_skill in required_skill
+                or required_skill in student_skill
             ):
 
                 if required_skill not in matching_skills:
@@ -513,55 +314,29 @@ def smart_skill_matching(
                         required_skill
                     )
 
-
-    # --------------------------------------------------------
-    # MISSING SKILLS
-    # --------------------------------------------------------
-
     missing_skills = [
-
         skill
-
         for skill in required_skills
-
         if skill not in matching_skills
     ]
 
-
-    # --------------------------------------------------------
-    # AI MATCH SCORE
-    # --------------------------------------------------------
-
-    if len(required_skills) > 0:
-
-        skill_score = (
-
-            len(matching_skills)
-            /
-            len(required_skills)
-
-        ) * 100
+    if required_skills:
 
         score = int(
-            skill_score
+            (
+                len(matching_skills)
+                / len(required_skills)
+            ) * 100
         )
 
     else:
 
-        # No technical skills detected
         score = 50
-
-
-    # Keep score between 0 and 100
 
     score = max(
         0,
-        min(
-            score,
-            100
-        )
+        min(score, 100)
     )
-
 
     return (
         matching_skills,
@@ -571,7 +346,7 @@ def smart_skill_matching(
 
 
 # ============================================================
-#                AI EXPLANATION
+# AI EXPLANATION
 # ============================================================
 
 def generate_ai_explanation(
@@ -580,16 +355,11 @@ def generate_ai_explanation(
     score
 ):
 
-    # --------------------------------------------------------
-    # MATCHING EXPLANATION
-    # --------------------------------------------------------
-
     if matching_skills:
 
         explanation = (
-
             "This opportunity matches your profile "
-            "because you have experience or skills in "
+            "because you have skills in "
             + ", ".join(matching_skills)
             + "."
         )
@@ -597,210 +367,187 @@ def generate_ai_explanation(
     else:
 
         explanation = (
-
-            "No direct technical skill match was detected "
-            "from the available opportunity description."
+            "No direct technical skill match was "
+            "detected from the available description."
         )
-
-
-    # --------------------------------------------------------
-    # SKILL GAP
-    # --------------------------------------------------------
 
     if missing_skills:
 
         explanation += (
-
-            " To improve your fit, consider learning "
-            + ", ".join(
-                missing_skills[:3]
-            )
+            " You can improve your profile by learning "
+            + ", ".join(missing_skills[:3])
             + "."
         )
-
-
-    # --------------------------------------------------------
-    # SCORE EXPLANATION
-    # --------------------------------------------------------
 
     if score >= 80:
 
         explanation += (
-
             " Your current skills show a strong "
-            "technical match for this opportunity."
+            "technical match."
         )
 
     elif score >= 50:
 
         explanation += (
-
-            " Your profile has a partial skill match, "
-            "so learning the missing skills can improve "
-            "your preparation."
+            " Your profile has a partial skill match."
         )
 
     else:
 
         explanation += (
-
-            " This opportunity may require additional "
-            "skills before you apply."
+            " This opportunity may require "
+            "additional skills."
         )
-
 
     return explanation
 
 
 # ============================================================
-#                 SKILL GAP SUGGESTIONS
+# SKILL GAP SUGGESTIONS
 # ============================================================
 
 def get_skill_gap_suggestions(
     missing_skills
 ):
 
-    skill_learning_map = {
+    learning_map = {
 
         "python":
-            "Practice Python basics, functions, OOP and projects.",
+            "Practice Python basics, OOP and projects.",
 
         "java":
-            "Learn Java OOP, collections, exception handling and DSA.",
+            "Learn Java OOP, collections and DSA.",
 
         "c":
-            "Practice C programming, arrays, pointers and functions.",
+            "Practice C arrays, pointers and functions.",
 
         "c++":
-            "Learn C++ OOP, STL and competitive programming basics.",
+            "Learn C++ OOP, STL and problem solving.",
 
         "javascript":
-            "Learn JavaScript basics, DOM and modern ES6 concepts.",
+            "Learn JavaScript, DOM and ES6.",
 
         "html":
-            "Learn HTML5 structure, forms and semantic elements.",
+            "Learn HTML5, forms and semantic elements.",
 
         "css":
-            "Practice CSS layouts, Flexbox, Grid and responsive design.",
+            "Practice CSS, Flexbox and responsive design.",
 
         "sql":
-            "Practice SQL queries, joins, grouping and database design.",
+            "Practice SQL queries, joins and databases.",
 
         "machine learning":
-            "Learn supervised learning, preprocessing and model evaluation.",
+            "Learn ML algorithms and model evaluation.",
 
         "deep learning":
-            "Learn neural networks, CNNs and model training.",
+            "Learn neural networks and CNNs.",
 
         "artificial intelligence":
-            "Study AI fundamentals, search, reasoning and machine learning.",
+            "Learn AI fundamentals and practical projects.",
 
         "ai":
-            "Learn AI fundamentals and build small AI projects.",
+            "Learn AI fundamentals and build small projects.",
 
         "ml":
-            "Practice machine learning algorithms with real datasets.",
+            "Practice machine learning with datasets.",
 
         "data science":
-            "Learn Python, statistics, data preprocessing and visualization.",
+            "Learn Python, statistics and data visualization.",
 
         "data analysis":
-            "Practice Pandas, NumPy, Excel and data visualization.",
+            "Practice Pandas, NumPy and visualization.",
 
         "tensorflow":
-            "Learn TensorFlow model building and neural network training.",
+            "Learn TensorFlow model building.",
 
         "pytorch":
-            "Practice PyTorch tensors, models and training workflows.",
+            "Practice PyTorch models and training.",
 
         "flask":
-            "Learn Flask routing, APIs, templates and deployment.",
+            "Learn Flask routing, APIs and deployment.",
 
         "django":
-            "Learn Django models, views, URLs and REST APIs.",
+            "Learn Django models, views and APIs.",
 
         "react":
-            "Learn React components, props, state and hooks.",
+            "Learn React components, props and hooks.",
 
         "node.js":
-            "Learn Node.js, Express and backend API development.",
+            "Learn Node.js and Express APIs.",
 
         "git":
-            "Practice Git commands, branches, commits and merging.",
+            "Practice Git commands, branches and commits.",
 
         "github":
-            "Learn GitHub repositories, branches, issues and pull requests.",
+            "Learn repositories, branches and pull requests.",
 
         "aws":
-            "Learn AWS cloud basics, EC2, S3 and IAM.",
+            "Learn AWS basics such as EC2 and S3.",
 
         "azure":
-            "Learn Azure cloud services and deployment basics.",
+            "Learn Azure cloud fundamentals.",
 
         "cloud":
-            "Learn cloud computing, deployment and basic cloud services.",
+            "Learn cloud computing and deployment.",
 
         "docker":
-            "Learn Docker images, containers and Dockerfiles.",
+            "Learn Docker images and containers.",
 
         "kubernetes":
-            "Learn Kubernetes pods, deployments and services.",
+            "Learn Kubernetes pods and deployments.",
 
         "mongodb":
-            "Learn MongoDB collections, documents and CRUD operations.",
+            "Learn MongoDB CRUD operations.",
 
         "mysql":
-            "Practice MySQL databases, queries and joins.",
+            "Practice MySQL queries and joins.",
 
         "excel":
-            "Learn Excel formulas, charts, filters and data analysis.",
+            "Learn Excel formulas and data analysis.",
 
         "power bi":
-            "Learn Power BI dashboards, data modeling and visualization.",
+            "Learn Power BI dashboards.",
 
         "tableau":
-            "Practice Tableau dashboards and data visualization.",
+            "Practice Tableau visualization.",
 
         "nlp":
-            "Learn text preprocessing, embeddings and NLP models.",
+            "Learn text preprocessing and NLP models.",
 
         "computer vision":
-            "Learn image processing, CNNs and computer vision projects.",
+            "Learn image processing and CNNs.",
 
         "opencv":
-            "Practice OpenCV image processing and computer vision.",
+            "Practice OpenCV image processing.",
 
         "android":
-            "Learn Android development, activities, layouts and APIs.",
+            "Learn Android activities and layouts.",
 
         "flutter":
-            "Learn Flutter widgets, Dart and mobile app development."
+            "Learn Flutter widgets and Dart."
     }
-
 
     suggestions = []
 
     for skill in missing_skills:
 
-        if skill in skill_learning_map:
+        if skill in learning_map:
 
             suggestions.append(
-                skill_learning_map[skill]
+                learning_map[skill]
             )
 
         else:
 
             suggestions.append(
-                f"Learn the fundamentals of {skill} "
-                "and build a small practical project."
+                f"Learn the fundamentals of {skill}."
             )
-
 
     return suggestions
 
 
 # ============================================================
-#                SAVE OPPORTUNITY
+# SAVE OPPORTUNITY
 # ============================================================
 
 def save_opportunity(
@@ -808,13 +555,9 @@ def save_opportunity(
 ):
 
     existing_links = [
-
         item["link"]
-
-        for item
-        in st.session_state.saved_opportunities
+        for item in st.session_state.saved_opportunities
     ]
-
 
     if opportunity["link"] not in existing_links:
 
@@ -834,23 +577,16 @@ def save_opportunity(
 
 
 # ============================================================
-#                REMOVE OPPORTUNITY
+# REMOVE OPPORTUNITY
 # ============================================================
 
-def remove_opportunity(
-    link
-):
+def remove_opportunity(link):
 
     st.session_state.saved_opportunities = [
-
         item
-
-        for item
-        in st.session_state.saved_opportunities
-
+        for item in st.session_state.saved_opportunities
         if item["link"] != link
     ]
-
 
     st.toast(
         "Opportunity removed."
@@ -858,163 +594,699 @@ def remove_opportunity(
 
 
 # ============================================================
-#             FORMAT SEARCH RESULTS
+# SEARCH
 # ============================================================
 
-if search_button and st.session_state.get(
-    "raw_results"
-):
+if search_button:
 
-    formatted_results = []
+    if opportunity_type == "Internships":
 
-
-    for result in st.session_state.raw_results:
-
-        # ----------------------------------------------------
-        # BASIC INFORMATION
-        # ----------------------------------------------------
-
-        title = result.get(
-            "title",
-            "Opportunity"
+        query = (
+            f"{skills} internship "
+            f"for {education} students "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
         )
 
+    elif opportunity_type == "Jobs":
 
-        link = result.get(
-            "link",
-            "#"
+        query = (
+            f"{skills} fresher jobs "
+            f"for {education} students "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
         )
 
+    elif opportunity_type == "Scholarships":
 
-        snippet = result.get(
-            "snippet",
-            "No description available."
+        query = (
+            f"{education} scholarships "
+            f"for students "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
         )
 
+    elif opportunity_type == "Hackathons":
 
-        organization = result.get(
-            "source",
-            "Not specified"
+        query = (
+            f"{skills} hackathons "
+            f"for students "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
         )
 
+    elif opportunity_type == "Competitions":
 
-        location_text = result.get(
-            "location",
-            location
+        query = (
+            f"{skills} competitions "
+            f"for {education} students "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
         )
 
+    else:
 
-        deadline = result.get(
-            "deadline",
-            "Check official website"
+        query = (
+            f"{skills} free certifications "
+            f"for {education} students "
+            f"{location} 2026 "
+            f"-site:linkedin.com "
+            f"-site:youtube.com"
         )
 
-
-        # ----------------------------------------------------
-        # COMBINE TEXT FOR AI ANALYSIS
-        # ----------------------------------------------------
-
-        opportunity_text = (
-
-            title
-            + " "
-            + snippet
-        )
-
-
-        # ----------------------------------------------------
-        # AI SMART MATCHING
-        # ----------------------------------------------------
-
-        (
-            matching_skills,
-            missing_skills,
-            ai_score
-        ) = smart_skill_matching(
-
-            skills,
-
-            opportunity_text
-        )
-
-
-        # ----------------------------------------------------
-        # AI EXPLANATION
-        # ----------------------------------------------------
-
-        ai_explanation = generate_ai_explanation(
-
-            matching_skills,
-
-            missing_skills,
-
-            ai_score
-        )
-
-
-        # ----------------------------------------------------
-        # SKILL GAP SUGGESTIONS
-        # ----------------------------------------------------
-
-        skill_gap_suggestions = get_skill_gap_suggestions(
-
-            missing_skills
-        )
-
-
-        # ----------------------------------------------------
-        # CREATE OPPORTUNITY OBJECT
-        # ----------------------------------------------------
-
-        opportunity = {
-
-            "title":
-                title,
-
-            "link":
-                link,
-
-            "snippet":
-                snippet,
-
-            "organization":
-                organization,
-
-            "location":
-                location_text,
-
-            "deadline":
-                deadline,
-
-            "score":
-                ai_score,
-
-            "matching_skills":
-                matching_skills,
-
-            "missing_skills":
-                missing_skills,
-
-            "ai_explanation":
-                ai_explanation,
-
-            "skill_gap_suggestions":
-                skill_gap_suggestions,
-
-            "type":
-                opportunity_type
-        }
-
-
-        formatted_results.append(
-            opportunity
-        )
-
-
-    # --------------------------------------------------------
-    # STORE FINAL RESULTS
-    # --------------------------------------------------------
-
-    st.session_state.search_results = (
-        formatted_results
+    st.info(
+        f"🔎 Searching for: **{query}**"
     )
+
+    results = search_serpapi(
+        query
+    )
+
+    if results:
+
+        formatted_results = []
+
+        for result in results:
+
+            title = result.get(
+                "title",
+                "Opportunity"
+            )
+
+            link = result.get(
+                "link",
+                "#"
+            )
+
+            snippet = result.get(
+                "snippet",
+                "No description available."
+            )
+
+            organization = result.get(
+                "source",
+                "Not specified"
+            )
+
+            location_text = result.get(
+                "location",
+                location
+            )
+
+            deadline = result.get(
+                "deadline",
+                "Check official website"
+            )
+
+            opportunity_text = (
+                title
+                + " "
+                + snippet
+            )
+
+            (
+                matching_skills,
+                missing_skills,
+                ai_score
+            ) = smart_skill_matching(
+                skills,
+                opportunity_text
+            )
+
+            ai_explanation = generate_ai_explanation(
+                matching_skills,
+                missing_skills,
+                ai_score
+            )
+
+            skill_gap_suggestions = (
+                get_skill_gap_suggestions(
+                    missing_skills
+                )
+            )
+
+            opportunity = {
+
+                "title": title,
+
+                "link": link,
+
+                "snippet": snippet,
+
+                "organization": organization,
+
+                "location": location_text,
+
+                "deadline": deadline,
+
+                "score": ai_score,
+
+                "matching_skills": matching_skills,
+
+                "missing_skills": missing_skills,
+
+                "ai_explanation": ai_explanation,
+
+                "skill_gap_suggestions":
+                    skill_gap_suggestions,
+
+                "type": opportunity_type
+            }
+
+            formatted_results.append(
+                opportunity
+            )
+
+        st.session_state.search_results = (
+            formatted_results
+        )
+
+        st.success(
+            f"🎉 Found {len(formatted_results)} opportunities!"
+        )
+
+    else:
+
+        st.session_state.search_results = []
+
+        st.warning(
+            "No opportunities found. "
+            "Try changing your skills or opportunity type."
+        )
+
+
+# ============================================================
+# DASHBOARD
+# ============================================================
+
+if st.session_state.search_results:
+
+    results = st.session_state.search_results
+
+    total_opportunities = len(
+        results
+    )
+
+    saved_count = len(
+        st.session_state.saved_opportunities
+    )
+
+    if total_opportunities > 0:
+
+        average_match = int(
+            sum(
+                item["score"]
+                for item in results
+            )
+            / total_opportunities
+        )
+
+    else:
+
+        average_match = 0
+
+
+    # ========================================================
+    # DASHBOARD METRICS
+    # ========================================================
+
+    st.markdown("---")
+
+    st.header(
+        "📊 Student Dashboard"
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+
+        st.metric(
+            "🎯 Opportunities Found",
+            total_opportunities
+        )
+
+    with col2:
+
+        st.metric(
+            "🔖 Saved",
+            saved_count
+        )
+
+    with col3:
+
+        st.metric(
+            "🤖 Average AI Match",
+            f"{average_match}%"
+        )
+
+
+    # ========================================================
+    # TOP RECOMMENDATIONS
+    # ========================================================
+
+    st.markdown("---")
+
+    st.header(
+        "🌟 Top Recommended Opportunities"
+    )
+
+    st.write(
+        "AI-powered recommendations based on your skills."
+    )
+
+    recommended_results = sorted(
+        results,
+        key=lambda item: item["score"],
+        reverse=True
+    )
+
+    top_results = recommended_results[:3]
+
+    for rank, item in enumerate(
+        top_results,
+        start=1
+    ):
+
+        st.markdown(
+            '<div class="card">',
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f'<div class="card-title">'
+            f'🏆 #{rank} {item["title"]}'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+        st.write(
+            f"🏢 **Organization:** "
+            f"{item['organization']}"
+        )
+
+        st.write(
+            f"🤖 **AI Match Score:** "
+            f"{item['score']}%"
+        )
+
+        st.progress(
+            item["score"] / 100
+        )
+
+        if item["matching_skills"]:
+
+            st.success(
+                "✅ Matching Skills: "
+                + ", ".join(
+                    item["matching_skills"]
+                )
+            )
+
+        if item["missing_skills"]:
+
+            st.warning(
+                "📚 Skills to Improve: "
+                + ", ".join(
+                    item["missing_skills"]
+                )
+            )
+
+        if item["link"] != "#":
+
+            st.link_button(
+                "🔗 View Opportunity",
+                item["link"],
+                use_container_width=True
+            )
+
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
+        )
+
+
+    # ========================================================
+    # FILTERS
+    # ========================================================
+
+    st.markdown("---")
+
+    st.subheader(
+        "🔎 Filter Opportunities"
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        search_text = st.text_input(
+            "Search by keyword",
+            placeholder=(
+                "Example: Python, AI, internship..."
+            )
+        )
+
+    with col2:
+
+        minimum_match = st.slider(
+            "Minimum AI Match",
+            0,
+            100,
+            0,
+            5
+        )
+
+
+    # ========================================================
+    # APPLY FILTER
+    # ========================================================
+
+    filtered_results = []
+
+    for item in results:
+
+        searchable_text = (
+            item["title"]
+            + " "
+            + item["snippet"]
+            + " "
+            + item["organization"]
+        )
+
+        keyword_match = (
+            search_text.lower()
+            in searchable_text.lower()
+        )
+
+        score_match = (
+            item["score"]
+            >= minimum_match
+        )
+
+        if (
+            keyword_match
+            and score_match
+        ):
+
+            filtered_results.append(
+                item
+            )
+
+
+    st.write(
+        f"Showing **{len(filtered_results)}** opportunities."
+    )
+
+
+    # ========================================================
+    # AVAILABLE OPPORTUNITIES
+    # ========================================================
+
+    st.markdown("---")
+
+    st.header(
+        "🎯 Available Opportunities"
+    )
+
+    for index, item in enumerate(
+        filtered_results,
+        start=1
+    ):
+
+        st.markdown(
+            '<div class="card">',
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f'<div class="card-title">'
+            f'{index}. {item["title"]}'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f'<div class="info">'
+            f'🏢 <b>Organization:</b> '
+            f'{item["organization"]}'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f'<div class="info">'
+            f'📍 <b>Location:</b> '
+            f'{item["location"]}'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f'<div class="info">'
+            f'📅 <b>Deadline:</b> '
+            f'{item["deadline"]}'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+
+        # ====================================================
+        # AI MATCH SCORE
+        # ====================================================
+
+        st.markdown(
+            f'<div class="match">'
+            f'🤖 AI Match Score: '
+            f'{item["score"]}%'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+        st.progress(
+            item["score"] / 100
+        )
+
+
+        # ====================================================
+        # MATCHING SKILLS
+        # ====================================================
+
+        if item["matching_skills"]:
+
+            st.success(
+                "✅ Matching Skills: "
+                + ", ".join(
+                    item["matching_skills"]
+                )
+            )
+
+        else:
+
+            st.info(
+                "ℹ️ No direct matching skills detected."
+            )
+
+
+        # ====================================================
+        # MISSING SKILLS
+        # ====================================================
+
+        if item["missing_skills"]:
+
+            st.warning(
+                "❌ Missing Skills: "
+                + ", ".join(
+                    item["missing_skills"]
+                )
+            )
+
+        else:
+
+            st.success(
+                "🎉 No major missing skills detected!"
+            )
+
+
+        # ====================================================
+        # AI EXPLANATION
+        # ====================================================
+
+        st.info(
+            "💡 **Why this matches you:**\n\n"
+            + item["ai_explanation"]
+        )
+
+
+        # ====================================================
+        # SKILL GAP
+        # ====================================================
+
+        if item["skill_gap_suggestions"]:
+
+            with st.expander(
+                "📚 View Skill Gap Suggestions"
+            ):
+
+                for suggestion in item[
+                    "skill_gap_suggestions"
+                ]:
+
+                    st.write(
+                        "• " + suggestion
+                    )
+
+
+        # ====================================================
+        # DESCRIPTION
+        # ====================================================
+
+        st.write(
+            item["snippet"]
+        )
+
+
+        # ====================================================
+        # BUTTONS
+        # ====================================================
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            if item["link"] != "#":
+
+                st.link_button(
+                    "🔗 View Opportunity",
+                    item["link"],
+                    use_container_width=True
+                )
+
+        with col2:
+
+            st.button(
+                "🔖 Save Opportunity",
+                key=f"save_{index}_{item['link']}",
+                on_click=save_opportunity,
+                args=(item,),
+                use_container_width=True
+            )
+
+
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
+        )
+
+
+# ============================================================
+# SAVED OPPORTUNITIES
+# ============================================================
+
+if st.session_state.saved_opportunities:
+
+    st.markdown("---")
+
+    st.header(
+        "🔖 Saved Opportunities"
+    )
+
+    for index, item in enumerate(
+        st.session_state.saved_opportunities,
+        start=1
+    ):
+
+        st.markdown(
+            '<div class="card">',
+            unsafe_allow_html=True
+        )
+
+        st.subheader(
+            f"{index}. {item['title']}"
+        )
+
+        st.write(
+            f"🏢 **Organization:** "
+            f"{item['organization']}"
+        )
+
+        st.write(
+            f"📍 **Location:** "
+            f"{item['location']}"
+        )
+
+        st.write(
+            f"🤖 **AI Match Score:** "
+            f"{item['score']}%"
+        )
+
+        st.progress(
+            item["score"] / 100
+        )
+
+        if item.get("matching_skills"):
+
+            st.write(
+                "✅ **Matching Skills:** "
+                + ", ".join(
+                    item["matching_skills"]
+                )
+            )
+
+        if item.get("missing_skills"):
+
+            st.write(
+                "❌ **Missing Skills:** "
+                + ", ".join(
+                    item["missing_skills"]
+                )
+            )
+
+        if item.get("ai_explanation"):
+
+            st.info(
+                "💡 " + item["ai_explanation"]
+            )
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            if item["link"] != "#":
+
+                st.link_button(
+                    "🔗 Open Opportunity",
+                    item["link"],
+                    use_container_width=True
+                )
+
+        with col2:
+
+            st.button(
+                "❌ Remove",
+                key=f"remove_{index}",
+                on_click=remove_opportunity,
+                args=(item["link"],),
+                use_container_width=True
+            )
+
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
+        )
+
+
+# ============================================================
+# FOOTER
+# ============================================================
+
+st.markdown("---")
+
+st.caption(
+    "OpportunityAI | Python • Streamlit • SerpApi • "
+    "AI Smart Matching • Skill Gap Analysis"
+)

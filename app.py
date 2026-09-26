@@ -60,6 +60,9 @@ st.markdown("""
 if "saved_opportunities" not in st.session_state:
     st.session_state.saved_opportunities = []
 
+if "search_results" not in st.session_state:
+    st.session_state.search_results = []
+
 
 # ---------------- HEADER ----------------
 
@@ -124,18 +127,14 @@ search_button = st.sidebar.button(
 )
 
 
-# ---------------- SAVED SECTION ----------------
+# ---------------- SIDEBAR SAVED COUNT ----------------
 
 st.sidebar.markdown("---")
 
 st.sidebar.subheader("🔖 Saved Opportunities")
 
-saved_count = len(
-    st.session_state.saved_opportunities
-)
-
 st.sidebar.write(
-    f"You have saved **{saved_count}** opportunities."
+    f"Saved: **{len(st.session_state.saved_opportunities)}**"
 )
 
 
@@ -146,8 +145,7 @@ def search_serpapi(query):
     if not API_KEY:
 
         st.error(
-            "SerpApi API key is not configured. "
-            "Please add SERPAPI_KEY in Streamlit Secrets."
+            "SerpApi API key is not configured."
         )
 
         return []
@@ -172,9 +170,7 @@ def search_serpapi(query):
 
         if "error" in data:
 
-            st.error(
-                data["error"]
-            )
+            st.error(data["error"])
 
             return []
 
@@ -276,8 +272,6 @@ def remove_opportunity(link):
 
 if search_button:
 
-    # -------- QUERY TYPES --------
-
     if opportunity_type == "Internships":
 
         query = (
@@ -339,31 +333,19 @@ if search_button:
         )
 
 
-    # -------- SEARCH INFO --------
-
     st.info(
         f"🔎 Searching for: **{query}**"
     )
 
-
-    # -------- GET RESULTS --------
 
     results = search_serpapi(query)
 
 
     if results:
 
-        st.success(
-            f"🎉 Found {len(results)} opportunities!"
-        )
+        formatted_results = []
 
-
-        # -------- RESULT CARDS --------
-
-        for index, result in enumerate(
-            results,
-            start=1
-        ):
+        for result in results:
 
             title = result.get(
                 "title",
@@ -400,7 +382,6 @@ if search_button:
                 snippet
             )
 
-
             opportunity = {
                 "title": title,
                 "link": link,
@@ -408,109 +389,223 @@ if search_button:
                 "organization": organization,
                 "location": location_text,
                 "deadline": deadline,
-                "score": score
+                "score": score,
+                "type": opportunity_type
             }
 
-
-            # -------- CARD --------
-
-            st.markdown(
-                '<div class="card">',
-                unsafe_allow_html=True
+            formatted_results.append(
+                opportunity
             )
 
 
-            st.markdown(
-                f'<div class="card-title">'
-                f'{index}. {title}'
-                f'</div>',
-                unsafe_allow_html=True
+        st.session_state.search_results = formatted_results
+
+        st.success(
+            f"🎉 Found {len(formatted_results)} opportunities!"
+        )
+
+
+# ---------------- DASHBOARD ----------------
+
+if st.session_state.search_results:
+
+    results = st.session_state.search_results
+
+    total_opportunities = len(results)
+
+    saved_count = len(
+        st.session_state.saved_opportunities
+    )
+
+    average_match = int(
+        sum(
+            item["score"]
+            for item in results
+        ) / total_opportunities
+    )
+
+
+    st.markdown("---")
+
+    st.header("📊 Student Dashboard")
+
+
+    col1, col2, col3 = st.columns(3)
+
+
+    with col1:
+
+        st.metric(
+            "🎯 Opportunities Found",
+            total_opportunities
+        )
+
+
+    with col2:
+
+        st.metric(
+            "🔖 Saved",
+            saved_count
+        )
+
+
+    with col3:
+
+        st.metric(
+            "⭐ Average Match",
+            f"{average_match}%"
+        )
+
+
+    # ---------------- FILTERS ----------------
+
+    st.markdown("---")
+
+    st.subheader("🔎 Filter Opportunities")
+
+    col1, col2 = st.columns(2)
+
+
+    with col1:
+
+        search_text = st.text_input(
+            "Search by keyword",
+            placeholder="Example: Python, AI, internship..."
+        )
+
+
+    with col2:
+
+        minimum_match = st.slider(
+            "Minimum Profile Match",
+            0,
+            90,
+            0,
+            5
+        )
+
+
+    # ---------------- APPLY FILTER ----------------
+
+    filtered_results = []
+
+    for item in results:
+
+        keyword_match = (
+            search_text.lower()
+            in (
+                item["title"]
+                + " "
+                + item["snippet"]
+                + " "
+                + item["organization"]
+            ).lower()
+        )
+
+        score_match = (
+            item["score"] >= minimum_match
+        )
+
+        if keyword_match and score_match:
+
+            filtered_results.append(
+                item
             )
 
 
-            st.markdown(
-                f'<div class="info">'
-                f'🏢 <b>Organization:</b> '
-                f'{organization}'
-                f'</div>',
-                unsafe_allow_html=True
-            )
+    st.write(
+        f"Showing **{len(filtered_results)}** opportunities."
+    )
 
 
-            st.markdown(
-                f'<div class="info">'
-                f'📍 <b>Location:</b> '
-                f'{location_text}'
-                f'</div>',
-                unsafe_allow_html=True
-            )
+    # ---------------- RESULT CARDS ----------------
+
+    for index, item in enumerate(
+        filtered_results,
+        start=1
+    ):
+
+        st.markdown(
+            '<div class="card">',
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f'<div class="card-title">'
+            f'{index}. {item["title"]}'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f'<div class="info">'
+            f'🏢 <b>Organization:</b> '
+            f'{item["organization"]}'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f'<div class="info">'
+            f'📍 <b>Location:</b> '
+            f'{item["location"]}'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f'<div class="info">'
+            f'📅 <b>Deadline:</b> '
+            f'{item["deadline"]}'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+        st.markdown(
+            f'<div class="match">'
+            f'⭐ Profile Match: '
+            f'{item["score"]}%'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+        st.progress(
+            item["score"] / 100
+        )
+
+        st.write(
+            item["snippet"]
+        )
 
 
-            st.markdown(
-                f'<div class="info">'
-                f'📅 <b>Deadline:</b> '
-                f'{deadline}'
-                f'</div>',
-                unsafe_allow_html=True
-            )
+        col1, col2 = st.columns(2)
 
 
-            st.markdown(
-                f'<div class="match">'
-                f'⭐ Profile Match: {score}%'
-                f'</div>',
-                unsafe_allow_html=True
-            )
+        with col1:
 
+            if item["link"] != "#":
 
-            st.progress(
-                score / 100
-            )
-
-
-            st.write(
-                snippet
-            )
-
-
-            # -------- BUTTONS --------
-
-            col1, col2 = st.columns(2)
-
-
-            with col1:
-
-                if link != "#":
-
-                    st.link_button(
-                        "🔗 View Opportunity",
-                        link,
-                        use_container_width=True
-                    )
-
-
-            with col2:
-
-                st.button(
-                    "🔖 Save Opportunity",
-                    key=f"save_{index}_{link}",
-                    on_click=save_opportunity,
-                    args=(opportunity,),
+                st.link_button(
+                    "🔗 View Opportunity",
+                    item["link"],
                     use_container_width=True
                 )
 
 
-            st.markdown(
-                '</div>',
-                unsafe_allow_html=True
+        with col2:
+
+            st.button(
+                "🔖 Save Opportunity",
+                key=f"save_{index}_{item['link']}",
+                on_click=save_opportunity,
+                args=(item,),
+                use_container_width=True
             )
 
 
-    else:
-
-        st.warning(
-            "No opportunities found. "
-            "Try changing your skills or location."
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
         )
 
 
@@ -521,11 +616,6 @@ if st.session_state.saved_opportunities:
     st.markdown("---")
 
     st.header("🔖 Saved Opportunities")
-
-    st.write(
-        "Your bookmarked opportunities are shown below."
-    )
-
 
     for index, item in enumerate(
         st.session_state.saved_opportunities,
@@ -558,6 +648,7 @@ if st.session_state.saved_opportunities:
 
         col1, col2 = st.columns(2)
 
+
         with col1:
 
             st.link_button(
@@ -565,6 +656,7 @@ if st.session_state.saved_opportunities:
                 item["link"],
                 use_container_width=True
             )
+
 
         with col2:
 

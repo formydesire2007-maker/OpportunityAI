@@ -1,5 +1,6 @@
 import requests
 import streamlit as st
+import re
 
 # ---------------- PAGE CONFIG ----------------
 
@@ -49,6 +50,14 @@ st.markdown("""
 .match {
     font-size: 18px;
     font-weight: 600;
+}
+
+.ai-box {
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    margin-top: 12px;
+    margin-bottom: 12px;
 }
 
 </style>
@@ -138,7 +147,9 @@ st.sidebar.write(
 )
 
 
-# ---------------- SEARCH FUNCTION ----------------
+# ============================================================
+#                    SEARCH FUNCTION
+# ============================================================
 
 def search_serpapi(query):
 
@@ -170,7 +181,9 @@ def search_serpapi(query):
 
         if "error" in data:
 
-            st.error(data["error"])
+            st.error(
+                data["error"]
+            )
 
             return []
 
@@ -188,46 +201,161 @@ def search_serpapi(query):
         return []
 
 
-# ---------------- MATCH SCORE ----------------
+# ============================================================
+#              AI SMART SKILL MATCHING
+# ============================================================
 
-def calculate_match(title, snippet):
+def extract_skills(text):
 
-    text = (
-        title + " " + snippet
-    ).lower()
+    """
+    Extract commonly used technical skills
+    from opportunity title and description.
+    """
 
-    keywords = []
+    text = text.lower()
 
-    keywords.extend(
-        education.lower().split()
+    skill_database = [
+        "python",
+        "java",
+        "c",
+        "c++",
+        "javascript",
+        "html",
+        "css",
+        "sql",
+        "machine learning",
+        "deep learning",
+        "artificial intelligence",
+        "ai",
+        "ml",
+        "data science",
+        "data analysis",
+        "tensorflow",
+        "pytorch",
+        "flask",
+        "django",
+        "react",
+        "node.js",
+        "git",
+        "github",
+        "aws",
+        "azure",
+        "cloud",
+        "docker",
+        "kubernetes",
+        "mongodb",
+        "mysql",
+        "excel",
+        "power bi",
+        "tableau",
+        "nlp",
+        "computer vision",
+        "opencv",
+        "android",
+        "flutter"
+    ]
+
+    found_skills = []
+
+    for skill in skill_database:
+
+        if skill in text:
+
+            if skill not in found_skills:
+
+                found_skills.append(skill)
+
+    return found_skills
+
+
+def smart_skill_matching(
+    student_skills,
+    opportunity_text
+):
+
+    # ---------------- STUDENT SKILLS ----------------
+
+    student_skills_list = [
+        skill.strip().lower()
+        for skill in student_skills.split(",")
+        if skill.strip()
+    ]
+
+    # ---------------- OPPORTUNITY SKILLS ----------------
+
+    required_skills = extract_skills(
+        opportunity_text
     )
 
-    keywords.extend(
-        skills.lower()
-        .replace(",", " ")
-        .split()
+    # ---------------- MATCHING SKILLS ----------------
+
+    matching_skills = []
+
+    for student_skill in student_skills_list:
+
+        for required_skill in required_skills:
+
+            student_clean = student_skill.lower()
+            required_clean = required_skill.lower()
+
+            if (
+                student_clean == required_clean
+                or student_clean in required_clean
+                or required_clean in student_clean
+            ):
+
+                if required_skill not in matching_skills:
+
+                    matching_skills.append(
+                        required_skill
+                    )
+
+    # ---------------- MISSING SKILLS ----------------
+
+    missing_skills = [
+        skill
+        for skill in required_skills
+        if skill not in matching_skills
+    ]
+
+    # ---------------- AI MATCH SCORE ----------------
+
+    if len(required_skills) > 0:
+
+        skill_score = (
+            len(matching_skills)
+            / len(required_skills)
+        ) * 100
+
+        score = int(skill_score)
+
+    else:
+
+        # If no technical skills are detected,
+        # give a neutral profile score.
+
+        score = 50
+
+    # Keep score between 0 and 100
+
+    score = max(
+        0,
+        min(
+            score,
+            100
+        )
     )
 
-    keywords.append(
-        location.lower()
+    return (
+        matching_skills,
+        missing_skills,
+        score
     )
 
-    matches = 0
 
-    for word in keywords:
-
-        if len(word) > 2 and word in text:
-            matches += 1
-
-    score = min(
-        95,
-        40 + matches * 10
-    )
-
-    return score
-
-
-# ---------------- SAVE FUNCTION ----------------
+# ============================================================
+#                  SAVE FUNCTION
+# ============================================================
 
 def save_opportunity(opportunity):
 
@@ -253,7 +381,9 @@ def save_opportunity(opportunity):
         )
 
 
-# ---------------- REMOVE FUNCTION ----------------
+# ============================================================
+#                REMOVE FUNCTION
+# ============================================================
 
 def remove_opportunity(link):
 
@@ -268,7 +398,9 @@ def remove_opportunity(link):
     )
 
 
-# ---------------- SEARCH ----------------
+# ============================================================
+#                      SEARCH
+# ============================================================
 
 if search_button:
 
@@ -332,14 +464,13 @@ if search_button:
             f"-site:youtube.com"
         )
 
-
     st.info(
         f"🔎 Searching for: **{query}**"
     )
 
-
-    results = search_serpapi(query)
-
+    results = search_serpapi(
+        query
+    )
 
     if results:
 
@@ -377,19 +508,45 @@ if search_button:
                 "Check official website"
             )
 
-            score = calculate_match(
-                title,
-                snippet
+            # ==================================================
+            # AI SMART MATCHING
+            # ==================================================
+
+            opportunity_text = (
+                title
+                + " "
+                + snippet
+            )
+
+            (
+                matching_skills,
+                missing_skills,
+                ai_score
+            ) = smart_skill_matching(
+                skills,
+                opportunity_text
             )
 
             opportunity = {
+
                 "title": title,
+
                 "link": link,
+
                 "snippet": snippet,
+
                 "organization": organization,
+
                 "location": location_text,
+
                 "deadline": deadline,
-                "score": score,
+
+                "score": ai_score,
+
+                "matching_skills": matching_skills,
+
+                "missing_skills": missing_skills,
+
                 "type": opportunity_type
             }
 
@@ -397,21 +554,26 @@ if search_button:
                 opportunity
             )
 
-
-        st.session_state.search_results = formatted_results
+        st.session_state.search_results = (
+            formatted_results
+        )
 
         st.success(
             f"🎉 Found {len(formatted_results)} opportunities!"
         )
 
 
-# ---------------- DASHBOARD ----------------
+# ============================================================
+#                    DASHBOARD
+# ============================================================
 
 if st.session_state.search_results:
 
     results = st.session_state.search_results
 
-    total_opportunities = len(results)
+    total_opportunities = len(
+        results
+    )
 
     saved_count = len(
         st.session_state.saved_opportunities
@@ -421,17 +583,17 @@ if st.session_state.search_results:
         sum(
             item["score"]
             for item in results
-        ) / total_opportunities
+        )
+        / total_opportunities
     )
-
 
     st.markdown("---")
 
-    st.header("📊 Student Dashboard")
-
+    st.header(
+        "📊 Student Dashboard"
+    )
 
     col1, col2, col3 = st.columns(3)
-
 
     with col1:
 
@@ -440,7 +602,6 @@ if st.session_state.search_results:
             total_opportunities
         )
 
-
     with col2:
 
         st.metric(
@@ -448,44 +609,49 @@ if st.session_state.search_results:
             saved_count
         )
 
-
     with col3:
 
         st.metric(
-            "⭐ Average Match",
+            "🤖 Average AI Match",
             f"{average_match}%"
         )
 
 
-    # ---------------- FILTERS ----------------
+    # ========================================================
+    #                      FILTERS
+    # ========================================================
 
     st.markdown("---")
 
-    st.subheader("🔎 Filter Opportunities")
+    st.subheader(
+        "🔎 Filter Opportunities"
+    )
 
     col1, col2 = st.columns(2)
-
 
     with col1:
 
         search_text = st.text_input(
             "Search by keyword",
-            placeholder="Example: Python, AI, internship..."
+            placeholder=(
+                "Example: Python, AI, internship..."
+            )
         )
-
 
     with col2:
 
         minimum_match = st.slider(
-            "Minimum Profile Match",
+            "Minimum AI Match",
             0,
-            90,
+            100,
             0,
             5
         )
 
 
-    # ---------------- APPLY FILTER ----------------
+    # ========================================================
+    #                  APPLY FILTER
+    # ========================================================
 
     filtered_results = []
 
@@ -503,10 +669,14 @@ if st.session_state.search_results:
         )
 
         score_match = (
-            item["score"] >= minimum_match
+            item["score"]
+            >= minimum_match
         )
 
-        if keyword_match and score_match:
+        if (
+            keyword_match
+            and score_match
+        ):
 
             filtered_results.append(
                 item
@@ -518,7 +688,9 @@ if st.session_state.search_results:
     )
 
 
-    # ---------------- RESULT CARDS ----------------
+    # ========================================================
+    #                  RESULT CARDS
+    # ========================================================
 
     for index, item in enumerate(
         filtered_results,
@@ -561,9 +733,14 @@ if st.session_state.search_results:
             unsafe_allow_html=True
         )
 
+
+        # ====================================================
+        #                AI MATCH SCORE
+        # ====================================================
+
         st.markdown(
             f'<div class="match">'
-            f'⭐ Profile Match: '
+            f'🤖 AI Match Score: '
             f'{item["score"]}%'
             f'</div>',
             unsafe_allow_html=True
@@ -573,13 +750,61 @@ if st.session_state.search_results:
             item["score"] / 100
         )
 
+
+        # ====================================================
+        #              MATCHING SKILLS
+        # ====================================================
+
+        if item["matching_skills"]:
+
+            st.success(
+                "✅ Matching Skills: "
+                + ", ".join(
+                    item["matching_skills"]
+                )
+            )
+
+        else:
+
+            st.info(
+                "ℹ️ No direct matching skills detected."
+            )
+
+
+        # ====================================================
+        #                MISSING SKILLS
+        # ====================================================
+
+        if item["missing_skills"]:
+
+            st.warning(
+                "❌ Missing Skills: "
+                + ", ".join(
+                    item["missing_skills"]
+                )
+            )
+
+        else:
+
+            st.success(
+                "🎉 No major missing skills detected!"
+            )
+
+
+        # ====================================================
+        #                  DESCRIPTION
+        # ====================================================
+
         st.write(
             item["snippet"]
         )
 
 
-        col1, col2 = st.columns(2)
+        # ====================================================
+        #                     BUTTONS
+        # ====================================================
 
+        col1, col2 = st.columns(2)
 
         with col1:
 
@@ -590,7 +815,6 @@ if st.session_state.search_results:
                     item["link"],
                     use_container_width=True
                 )
-
 
         with col2:
 
@@ -609,13 +833,17 @@ if st.session_state.search_results:
         )
 
 
-# ---------------- SAVED OPPORTUNITIES ----------------
+# ============================================================
+#                 SAVED OPPORTUNITIES
+# ============================================================
 
 if st.session_state.saved_opportunities:
 
     st.markdown("---")
 
-    st.header("🔖 Saved Opportunities")
+    st.header(
+        "🔖 Saved Opportunities"
+    )
 
     for index, item in enumerate(
         st.session_state.saved_opportunities,
@@ -642,12 +870,40 @@ if st.session_state.saved_opportunities:
         )
 
         st.write(
-            f"⭐ **Profile Match:** "
+            f"🤖 **AI Match Score:** "
             f"{item['score']}%"
         )
 
-        col1, col2 = st.columns(2)
 
+        # Matching skills in saved section
+
+        if item.get(
+            "matching_skills"
+        ):
+
+            st.write(
+                "✅ **Matching Skills:** "
+                + ", ".join(
+                    item["matching_skills"]
+                )
+            )
+
+
+        # Missing skills in saved section
+
+        if item.get(
+            "missing_skills"
+        ):
+
+            st.write(
+                "❌ **Missing Skills:** "
+                + ", ".join(
+                    item["missing_skills"]
+                )
+            )
+
+
+        col1, col2 = st.columns(2)
 
         with col1:
 
@@ -656,7 +912,6 @@ if st.session_state.saved_opportunities:
                 item["link"],
                 use_container_width=True
             )
-
 
         with col2:
 
@@ -674,10 +929,12 @@ if st.session_state.saved_opportunities:
         )
 
 
-# ---------------- FOOTER ----------------
+# ============================================================
+#                       FOOTER
+# ============================================================
 
 st.markdown("---")
 
 st.caption(
-    "OpportunityAI | Python • Streamlit • SerpApi"
+    "OpportunityAI | Python • Streamlit • SerpApi • AI Smart Matching"
 )
